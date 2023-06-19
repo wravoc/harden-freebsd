@@ -48,7 +48,7 @@ If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run
 
 #### Verification
 
-To err on the safe side, the script does primitive verification of the `rc.conf` and `sysctl.conf` flags and some directives it expects. If may error on some abnormal directives which will cause it put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
+To err on the safe side, the script does primitive verification of the `rc.conf` and `sysctl.conf` flags and some directives it expects. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
 
 * Conformance of `hostname` will check that it does not start with a number. Although it is doable in FreeBSD it can cause trouble in some applications and networking instances 
   * If you must have a hostname starting with a number simply remove the check
@@ -75,8 +75,7 @@ The newly applied settings will not take affect until you reset your password.
 
 ## Automatic Jail Lockdown/Management
 
-1. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon reboot. To update all jails simply copy new settings files.
-   1. `security.jail.chflags_allow=0`
+1. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon next reboot. To update all jails simply copy `settings.ini` with your own script to all appropriate locations for intake. 
 
 `crontab -e`
 
