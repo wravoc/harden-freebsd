@@ -2,7 +2,7 @@
 
 ![](images/harden-freebsd-logo.jpg)
 
-FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script will duplicate almost all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and more. Any directive can be set and re-set with a customizeable `settings.ini` for administering, tuning your system, and easy to use across jails. 
+FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script will duplicate almost all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning your system, and easy to use across jails. 
 
 Even though I am by no means a FreeBSD expert, each of the security settings was researched, assessed and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability. 
 
