@@ -32,11 +32,11 @@ Even though I am by no means a FreeBSD expert, each of the security settings was
 
 **WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 or 0 and rebooted!**
 
-* Set `kernlevel = 0` if you want to test various setting groups with your applications and then once
+* Set `kernlevel = 0` if you want to test various setting groups with your applications and network
 * Customize `settings.ini`  to whatever is needed, the script will change the directive to your flag
 * Set permissions `chmod 750 harden-freebsd.py` to prevent shell injection from another account or process
 * Set permissions `chmod 640 settings.ini` to prevent shell injection from another account or process
-* No `settings.ini` section can be entirely commented out nor be completely empty.
+* No `settings.ini` section can be entirely commented out nor be completely empty
 
 ## Customization
 
