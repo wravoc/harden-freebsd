@@ -87,6 +87,64 @@ The newly applied settings will not take affect until you reset your password.
 4. Use mutiple copies of the script and settings.ini for each jail
 5. Put it in your template
 
+## Setting Descriptors
+**Startup**
+* kern_securelevel_enable = "YES"
+    * Enable access to other than permanently insecure modes
+* Disable Sendmail
+* syslogd_flags="-ss"
+    * Disallow syslogd to bind to a network socket
+* clear_tmp_enable = "YES"
+    * Clear the /tmp directory on reboot
+* icmp_drop_redirect="YES"
+    * Disallow redirection of ICMP (ping, echo)
+* inetd_enable = "NO"
+    * Disallow Network File System to share directories over the network
+* portmap_enable = "NO"
+    * Disallow portmapping since Network File Systems is disallowed
+* update_motd = "NO"
+    * Disallow computer system details from being added to /etc/motd on system reboot
+**System**
+* kern.securelevel = 1 [(*)](https://man.freebsd.org/cgi/man.cgi?securelevel)
+    * The system immutable and system append-only flags may
+	   not be turned off; disks for	mounted	file systems, /dev/mem and
+	   /dev/kmem may not be	opened for writing; /dev/io (if	your platform
+	   has it) may not be opened at	all; kernel modules (see kld(4)) may
+	   not be loaded or unloaded.  The kernel debugger may not be entered
+	   using the debug.kdb.enter sysctl.  A	panic or trap cannot be	forced
+	   using the debug.kdb.panic, debug.kdb.panic_str and other sysctl's.
+* security.bsd.see_other_uids = 0
+    * Disallow users from seeing information about processes that are being run by another user (UID)
+* security.bsd.see_other_gids = 0 [(*)](https://docs.freebsd.org/en/books/handbook/mac/#mac-policies)
+    * Disallow users from seeing information about processes that are being run by another group (GID)
+* security.bsd.see_jail_proc = 0 (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
+    * Disallow non-root users from seeing processes in jail
+* security.bsd.unprivileged_read_msgbuf = 0 (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
+    * Disallow non-root users from reading system message buffer
+* kern.randompid = 107 [(*)](https://wiki.freebsd.org/DevSummit/201308/Security)
+    * Force kernel to randomize process ID's using above salt value instead of seqential
+* net.inet.ip.random_id = 1
+    * Randomize IP packet ID
+* net.inet.ip.redirect = 0 
+    * Disallow ICMP host redirects
+* net.inet.tcp.always_keepalive = 0
+    * Disallow keeping open idle TCP connections
+* net.inet.tcp.blackhole = 2 +(UDP)[(*)](https://man.freebsd.org/cgi/man.cgi?query=blackhole)
+    * Packets that are received on a closed port will not initiate a reply
+* net.inet.tcp.path_mtu_discovery = 0 [(*)](https://man.freebsd.org/cgi/man.cgi?query=tcp&sektion=4)
+    * Disallows TCP to determine the minimum MTU size on any network that is currently in the path between two hosts
+* net.inet.icmp.drop_redirect = 1
+    * Pairs with rc.conf startup, as once enabled, it is then set
+* hw.mds_disable = 1 [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
+    * Enable Microarchitectural Data Sampling Mitigation version `VERW`
+    * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
+* hw.ibrs_disable = 1 [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
+    * Prevent Spectre and Meltdown CPU Vulnerabilities
+* kern.elf64.aslr.stack = 3 [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
+    * Address space layout randomization is used to increase the difficulty of performing a buffer overflow attack
+    * For 32bit CPU or VM Architecture switch directive to `kern.elf32.aslr.stack`
+
+
 ## License Summary
 
 Non-Commercial usage, retain and forward author and license data. Modify existing code as needed up to 25% while allowing unlimited new additions. The Software may use or be used by other software.
