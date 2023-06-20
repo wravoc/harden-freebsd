@@ -104,7 +104,9 @@ The newly applied settings will not take affect until you reset your password.
     * Disallow portmapping since Network File Systems is disallowed
 * update_motd = "NO"
     * Disallow computer system details from being added to /etc/motd on system reboot
+
 **System**
+
 * kern.securelevel = 1 [(*)](https://man.freebsd.org/cgi/man.cgi?securelevel)
     * The system immutable and system append-only flags may
 	   not be turned off; disks for	mounted	file systems, /dev/mem and
