@@ -79,7 +79,7 @@ The newly applied settings will not take affect until you reset your password.
 
 `crontab -e`
 
-`@reboot harden-freebsd.py`
+`@reboot /path/to/harden-freebsd.py`
 
 2. Have all jails pointing to the same rc script via `exec.start` and set paths in the script pointing to the same location modified by the script paths. 
 3. Add new jail specific entires to `settings.ini [SYSTEM]` section for sysctl.conf udpate
@@ -142,9 +142,9 @@ The newly applied settings will not take affect until you reset your password.
     * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
 * hw.ibrs_disable = 1 [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
     * Prevent Spectre and Meltdown CPU Vulnerabilities
-* kern.elf64.aslr.stack = 3 [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
+* kern.elf32.aslr.stack = 3 [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
     * Address space layout randomization is used to increase the difficulty of performing a buffer overflow attack
-    * For 32bit CPU or VM Architecture switch directive to `kern.elf32.aslr.stack`
+    * 64bit is enabled by default in 13.2 so you can set this to 0 for 64bit processors or remove
 
 
 ## License Summary
