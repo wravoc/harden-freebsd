@@ -43,15 +43,13 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 
 ## Requirements
-* FreeBSD 13.2
+* FreeBSD 13.1
 * Python 3.9.16
 
 
 ## Installation
 
 **WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 or 0 and rebooted!**
-
-**NOTE** Enforces the style format of `loader.conf` listed in the manual and `/boot/defaults/loader.conf` being that flags must be encased **with quotes** and normalized with capital letters.
 
 * Set `kernlevel = -1` if you want to test various setting groups with your applications and network
 * Customize `settings.ini`  to whatever is needed, the script will change the directive to your flag
@@ -76,11 +74,9 @@ If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run
 
 To err on the safe side, the script does primitive verification of the confs flags and some directives *it expects*. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
 
-* Conformance of `hostname` will check that it does not start with a number. Although it is doable in FreeBSD it can cause trouble in some applications and networking instances 
-    * If you must have a hostname starting with a number simply remove the check
-* Conformance in use of capital letters in `rc.conf` and `loader.conf`
+* For `/etc/sysctl.conf` the script checks for no quotes
 * For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
-    * All directives must be in quotes
+    * All directives in these sister confs must be in quotes
 
 If you do get stuck in read-only single-user mode and need to correct a configuration file then use:
 
@@ -181,15 +177,13 @@ The newly applied settings will not take affect until you reset your password.
     * `dtrace -wn 'tcp:::connect-established { @[args[3]->tcps_raddr] = count(); }'`
     * `dtrace -wqn tick-1sec'{system("date")}'`
     * `dtrace -qn tick-1sec'{system("date")}'`
-* `hw.ibrs_disable = "1"` [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
-    * Prevent Spectre and Meltdown CPU Vulnerabilities
+* `hw.ibrs_disable = "3"` [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
+    * Prevent Spectre and Meltdown CPU Vulnerabilities, 3 for AUTO
 * `kern.elf32.aslr.stack = "3"` [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
     * Address space layout randomization is used to increase the difficulty of performing a buffer overflow attack
     * 64bit is enabled by default in 13.2 so you can set this to 0 for 64bit processors or remove
-* `kern.elf64.aslr.pie_enable = "1"`
+* `kern.elf32.aslr.pie_enable = "1"`
     * Enable ASLR for Position-Independent Executables (PIE) binaries
-* `vm.pmap.pti = "1"` [(*)](https://www.freebsd.org/security/advisories/FreeBSD-EN-18:07.pmap.asc)
-    * Disallow userspace to kernel page table mapping preventing Meltdown
 * `cpu_microcode_load = "NO"`
     * Disallow automatic CPU Microcode updates
 
