@@ -63,7 +63,10 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## Customization
 
 #### 64bit vs 32bit
-This script is targeted to 64bit so wherever you see a directive that says 64 change to 32 if you are on a 32bit processor.
+Most tunable mitigations for 64bit are already included by default in FreeBSD 13.1 so 32bit directives were included for coverage. I can see no affect from setting the 32bit mitigations on 64bit systems, they are simply ignored. For clarity on unknown hardware, hardware mode, VM, or cloud use the following commands:
+* CPU: `sysctl hw.model hw.machine hw.ncpu`
+* Bits: `getconf LONG_BIT`
+
 
 #### Backups
 
