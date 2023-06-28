@@ -2,7 +2,7 @@
 
 ![](images/harden-freebsd-logo.jpg)
 
-FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script is will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning your system, and easy to use across jails. 
+FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning, and easier jail management. 
 
 This script is also targeted to new users of FreeBSD so that they may leverage years of security contributions by the entire BSD community across all spectra, implemented on thier system in seconds.
 
@@ -18,9 +18,9 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 
 ## Addtional Software
-* Scripts included to check for Vulnerabilities 
+* Scripts included to verify the implementation 
     * Kernel vulnerablities provided by [Stéphane Lesimple](https://github.com/speed47) spectre-meltdown-checker
-        * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, CVE-2018-12207
+        * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, [CVE-2018-12207](https://www.freebsd.org/security/advisories/FreeBSD-SA-19:25.mcepsc.asc)
     * MMAP, MProtect provided by [u/zabolekar](https://www.reddit.com/r/BSD/comments/10isrl3/notes_about_mmap_mprotect_and_wx_on_different_bsd/)
         * `cc mmap_protect.c` 
         * `./a.out`
@@ -29,12 +29,11 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ## Features
 
-* Makes backups of `rc.conf`, `sysctl.conf`, and `login.conf` on first run
+* Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
 * Sets passwords to blowfish encryption
 * Sets passwords to expire at 120 days
-* Handy for jail administration
 * Disables sendmail completely
-* Removes `other` write permissions from key system files
+* Removes `other` write permissions from key system files and folders
 * Allows only root for `cron` and `at`
 * Primitive directive and flag verification catches simple errors
 * Modularizable within other tools
@@ -52,7 +51,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 **WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 or 0 and rebooted!**
 
-**NOTE** Enforces the style format of `loader.conf` listed in the manual and `/boot/defaults/loader.conf` being that flags must in encased **with quotes** and normalized with capital letters.
+**NOTE** Enforces the style format of `loader.conf` listed in the manual and `/boot/defaults/loader.conf` being that flags must be encased **with quotes** and normalized with capital letters.
 
 * Set `kernlevel = -1` if you want to test various setting groups with your applications and network
 * Customize `settings.ini`  to whatever is needed, the script will change the directive to your flag
@@ -76,7 +75,7 @@ To err on the safe side, the script does primitive verification of the confs fla
 * Conformance of `hostname` will check that it does not start with a number. Although it is doable in FreeBSD it can cause trouble in some applications and networking instances 
     * If you must have a hostname starting with a number simply remove the check
 * Conformance in use of capital letters in `rc.conf` where it is expected 
-* For `/boot/loader.conf` strictly verifiies syntax from man and `/boot/defaults/loader.conf` syntax
+* For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
     * All directives must be in quotes
 
 If you do get stuck in read-only single-user mode and need to correct a configuration file then use:
@@ -114,25 +113,25 @@ The newly applied settings will not take affect until you reset your password.
 
 ## Setting Descriptors
 **Startup**
-* kern_securelevel_enable = "YES"
+* `kern_securelevel_enable = "YES"`
     * Enable access to other than permanently insecure modes
 * Disable Sendmail
-* syslogd_flags="-ss"
+* `syslogd_flags="-ss"`
     * Disallow syslogd to bind to a network socket
-* clear_tmp_enable = "YES"
+* `clear_tmp_enable = "YES"`
     * Clear the /tmp directory on reboot
-* icmp_drop_redirect="YES"
+* `icmp_drop_redirect="YES"`
     * Disallow redirection of ICMP (ping, echo)
-* inetd_enable = "NO"
+* `inetd_enable = "NO"`
     * Disallow Network File System to share directories over the network
-* portmap_enable = "NO"
+* `portmap_enable = "NO"`
     * Disallow portmapping since Network File Systems is disallowed
-* update_motd = "NO"
+* `update_motd = "NO"`
     * Disallow computer system details from being added to /etc/motd on system reboot
 
 **System**
 
-* kern.securelevel = 1 [(*)](https://man.freebsd.org/cgi/man.cgi?securelevel)
+* `kern.securelevel = 1` [(*)](https://man.freebsd.org/cgi/man.cgi?securelevel)
     * The system immutable and system append-only flags may
 	   not be turned off; disks for	mounted	file systems, /dev/mem and
 	   /dev/kmem may not be	opened for writing; /dev/io (if	your platform
@@ -140,54 +139,54 @@ The newly applied settings will not take affect until you reset your password.
 	   not be loaded or unloaded.  The kernel debugger may not be entered
 	   using the debug.kdb.enter sysctl.  A	panic or trap cannot be	forced
 	   using the debug.kdb.panic, debug.kdb.panic_str and other sysctl's.
-* security.bsd.see_other_uids = 0
+* `security.bsd.see_other_uids = 0`
     * Disallow users from seeing information about processes that are being run by another user (UID)
-* security.bsd.see_other_gids = 0 [(*)](https://docs.freebsd.org/en/books/handbook/mac/#mac-policies)
+* `security.bsd.see_other_gids = 0` [(*)](https://docs.freebsd.org/en/books/handbook/mac/#mac-policies)
     * Disallow users from seeing information about processes that are being run by another group (GID)
-* security.bsd.see_jail_proc = 0 (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
+* `security.bsd.see_jail_proc = 0` (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
     * Disallow non-root users from seeing processes in jail
-* security.bsd.unprivileged_read_msgbuf = 0 (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
+* `security.bsd.unprivileged_read_msgbuf = 0` (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
     * Disallow non-root users from reading system message buffer
-* kern.randompid = 107 [(*)](https://wiki.freebsd.org/DevSummit/201308/Security)
+* `kern.randompid = 107` [(*)](https://wiki.freebsd.org/DevSummit/201308/Security)
     * Force kernel to randomize process ID's using above salt value instead of seqential
-* net.inet.ip.random_id = 1
+* `net.inet.ip.random_id = 1`
     * Randomize IP packet ID
-* net.inet.ip.redirect = 0 
+* `net.inet.ip.redirect = 0` 
     * Disallow ICMP host redirects
-* net.inet.tcp.always_keepalive = 0
+* `net.inet.tcp.always_keepalive = 0`
     * Disallow keeping open idle TCP connections
-* net.inet.tcp.blackhole = 2 +(UDP)[(*)](https://man.freebsd.org/cgi/man.cgi?query=blackhole)
+* `net.inet.tcp.blackhole = 2` +(UDP)[(*)](https://man.freebsd.org/cgi/man.cgi?query=blackhole)
     * Packets that are received on a closed port will not initiate a reply
-* net.inet.tcp.path_mtu_discovery = 0 [(*)](https://man.freebsd.org/cgi/man.cgi?query=tcp&sektion=4)
+* `net.inet.tcp.path_mtu_discovery = 0` [(*)](https://man.freebsd.org/cgi/man.cgi?query=tcp&sektion=4)
     * Disallows TCP to determine the minimum MTU size on any network that is currently in the path between two hosts
-* net.inet.icmp.drop_redirect = 1
+* `net.inet.icmp.drop_redirect = 1`
     * Pairs with rc.conf startup, as once enabled, it is then set
-* hw.mds_disable = 1 [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
+* `hw.mds_disable = 1` [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
     * Enable Microarchitectural Data Sampling Mitigation version `VERW`
     * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
-* hw.spec_store_bypass_disable = 1 [(*)](https://handwiki.org/wiki/Speculative_Store_Bypass)
+* `hw.spec_store_bypass_disable = 1` [(*)](https://handwiki.org/wiki/Speculative_Store_Bypass)
     * Disallow Speculative Bypass used by Spectre and Meltdown
-* kern.elf64.allow_wx = 0 [(*)](https://www.ibm.com/docs/en/aix/7.2?topic=memory-understanding-mapping)
+* `kern.elf64.allow_wx = 0` [(*)](https://www.ibm.com/docs/en/aix/7.2?topic=memory-understanding-mapping)
     * Disallow write and execute for shared memory
 
 
 **Kernel**
-* security.bsd.allow_destructive_dtrace
+* `security.bsd.allow_destructive_dtrace = "0"`
     * Disallow DTrace to terminate proccesses
     * Test DTrace hardening: Using all 3 commands should result in `Permission denied` or `Destructive actions not allowed`:
     * `dtrace -wn 'tcp:::connect-established { @[args[3]->tcps_raddr] = count(); }'`
     * `dtrace -wqn tick-1sec'{system("date")}'`
     * `dtrace -qn tick-1sec'{system("date")}'`
-* hw.ibrs_disable = 1 [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
+* `hw.ibrs_disable = "1"` [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
     * Prevent Spectre and Meltdown CPU Vulnerabilities
-* kern.elf32.aslr.stack = 3 [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
+* `kern.elf32.aslr.stack = "3"` [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
     * Address space layout randomization is used to increase the difficulty of performing a buffer overflow attack
     * 64bit is enabled by default in 13.2 so you can set this to 0 for 64bit processors or remove
-* kern.elf64.aslr.pie_enable = "1"
+* `kern.elf64.aslr.pie_enable = "1"`
     * Enable ASLR for Position-Independent Executables (PIE) binaries
-* vm.pmap.pti = 1 [(*)](https://www.freebsd.org/security/advisories/FreeBSD-EN-18:07.pmap.asc)
+* `vm.pmap.pti = "1"` [(*)](https://www.freebsd.org/security/advisories/FreeBSD-EN-18:07.pmap.asc)
     * Disallow userspace to kernel page table mapping preventing Meltdown
-* cpu_microcode_load = "NO"
+* `cpu_microcode_load = "NO"`
     * Disallow automatic CPU Microcode updates
 
 
