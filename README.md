@@ -20,6 +20,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## Addtional Software
 * Scripts included to verify the implementation 
     * Kernel vulnerablity diagnosis provided by [Stéphane Lesimple's](https://github.com/speed47) spectre-meltdown-checker
+        * `chmod 750 spectre-meltdown-checker.sh`
         * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, [CVE-2018-12207](https://www.freebsd.org/security/advisories/FreeBSD-SA-19:25.mcepsc.asc)
     * MMAP, MProtect vulnerability diagnosis provided by [u/zabolekar](https://www.reddit.com/r/BSD/comments/10isrl3/notes_about_mmap_mprotect_and_wx_on_different_bsd/)
         * `cc mmap_protect.c` 
