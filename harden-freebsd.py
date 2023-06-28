@@ -11,7 +11,7 @@ __author__ = "Elias Christopher Griffin"
 __url__ = "https://www.quadhelion.engineering"
 __license__ = "QHELP-OME-NC-ND-NAI"
 __copyright__ = "https://www.quadhelion.engineering/QHELP-OME-NC-ND-NAI.html"
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 __date__ = "06/27/2023"
 __email__ = "elias@quadhelion.engineering"
 __status__ = "Production"
@@ -109,10 +109,11 @@ if config['SCRIPT']['first_run'] == "True":
             config.set('SCRIPT', 'first_run', 'False')
             config.write(configfile)
         print(f"\n*********************\033[38;5;76m Success \033[0;0m*************************")
-        print(f"Created:")
-        print(f"{cron_access.name}, {at_access.name} \n")
-        print(f"Backups Made:")
-        print(f", {rc_backup.name}, {sysctl_backup.name}, {login_backup.name}, {loader_backup.name},                \n")
+        print(f"\033[38;5;75mCreated: \033[0;0m")
+        print(f" {cron_access.name}, {at_access.name} \n")
+        print(f"\033[38;5;75mBackups Made: \033[0;0m")
+        print(f" {rc_backup.name}, {sysctl_backup.name}")
+        print(f" {login_backup.name}, {loader_backup.name} \n")
         print(f"*******************************************************\n")
 
 
@@ -149,7 +150,8 @@ else:
 finally:
     writeLog("syslog", "Hardening in progress")
     print(f"\n********************\033[38;5;75m Info Panel \033[0;0m***********************")
-    print(f"Executing {__file__} {date_time}")
+    print(f"Executing {__file__}")
+    print(f"Executing {date_time}")
     print(f"*******************************************************\n")
     
 
@@ -218,7 +220,8 @@ class Conf:
     def verifyConf(self): 
         global conf_directives
         conf_directives = []
-        sysctl_conf_verify = re.compile(r'-?[0-9]+')
+        sysctl_conf_verify = re.compile(r'[^\"]') # No quotes
+        loader_rc_conf_verify = re.compile(r'^[\"].+[$\"]') # Pair of quotes
         try:
             with open(self.file, 'r+') as file_content:
                 lines = file_content.readlines()
@@ -232,43 +235,29 @@ class Conf:
                         print(f"\n*******************************************************")
                         print(f"Error at {lines[i]}: No equality operator. Restored original.")
                         print(f"*******************************************************\n")
+                        writeLog("script", "No equality operator at line " + lines[i].rstrip() + " in " + self.file.name)
                         self.restoreConf()
-                        writeLog("script", "No equality operator at line " + lines[i] + " in " + self.file.name)
                         sys.exit()
-                    elif self.file == rc_conf and line.startswith("hostname") and re.match(r'^\"[A-Za-z]+[0-9]?\"$', partitioned_line[2]) == None:
-                        print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed for hostname. Restored original.")
-                        print(f"*******************************************************\n")
-                        self.restoreConf()
-                        writeLog("script", "Hostname improper, starts with number " + lines[i] + " in " + self.file.name)
-                        sys.exit()
-                    elif self.file == rc_conf and line.startswith("syslogd_flags") and re.match(r'^\"-?[a-z]+\"$', partitioned_line[2]) == None:
-                        print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed in syslogd_flags. Restored original.")
-                        print(f"*******************************************************\n")
-                        self.restoreConf()
-                        writeLog("script", "Syslog_flags flag problem " + lines[i] + " in " + self.file.name)
-                        sys.exit()
-                    elif self.file == rc_conf and not line.startswith("syslogd_flags") and not line.startswith("hostname") and re.match(r'^\"[A-Z]+\"$', partitioned_line[2]) == None:
-                        print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed not allowed in {lines[i]} in {self.file}. Restored original.")
-                        print(f"*******************************************************\n")
-                        self.restoreConf()
-                        writeLog("script", "Error at line " + lines[i] + " in " + self.file.name + ". Write all flags in capital letters")
-                        sys.exit()
-                    elif self.file == loader_conf and re.match(r'([\"]+[0-9]?[A-Z]*[\"]+)', partitioned_line[2]) == None:
-                        self.restoreConf()
+                    elif self.file == rc_conf and re.match(loader_rc_conf_verify, partitioned_line[2]) == None:
                         print(f"\n*******************************************************")
                         print(f"Error: {self.flag} not allowed in {lines[i]} in {self.file}. Restored original.")
                         print(f"*******************************************************\n")
-                        writeLog("script", "Loader.conf matching error at line " + lines[i] + ". Flags must be in quotes per man loader.conf")
+                        writeLog("script", "Quote matching error at line " + lines[i].rstrip())
+                        self.restoreConf()
+                        sys.exit()
+                    elif self.file == loader_conf and re.match(loader_rc_conf_verify, partitioned_line[2]) == None:
+                        print(f"\n*******************************************************")
+                        print(f"Error: {self.flag} not allowed in {lines[i]} in {self.file}. Restored original.")
+                        print(f"*******************************************************\n")
+                        writeLog("script", "Quote matching error at line " + lines[i].rstrip())
+                        self.restoreConf()
                         sys.exit()
                     elif self.file == sysctl_conf and re.match(sysctl_conf_verify, partitioned_line[2]) == None:
-                        self.restoreConf()
                         print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed in {lines[i]} in {self.file}. Restored original.")
+                        print(f"Error: {self.flag} not allowed in {lines[i].rstrip()} in {self.file}. Restored original.")
                         print(f"*******************************************************\n")
-                        writeLog("script", "Loader.conf matching error at line " + lines[i])
+                        writeLog("script", "Quote in sysctl.conf at line " + lines[i])
+                        self.restoreConf()
                         sys.exit()
                     else:
                         conf_directives.append(line.rstrip())
@@ -303,7 +292,7 @@ class Conf:
 
 
 
-# Hardcoded sections as only those contain flags we can dynamically set and re-set.
+# Hardcoded sections as only t e contain flags we can dynamically set and re-set.
 # Loops through all directives and sets each
 class SetOpts:
     def __init__(self, section):
