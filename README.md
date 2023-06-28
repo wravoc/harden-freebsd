@@ -19,7 +19,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ## Addtional Software
 * Scripts included to verify the implementation 
-    * Kernel vulnerablities provided by [Stéphane Lesimple](https://github.com/speed47) spectre-meltdown-checker
+    * Kernel vulnerablity diagnosis provided by [Stéphane Lesimple's](https://github.com/speed47) spectre-meltdown-checker
         * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, [CVE-2018-12207](https://www.freebsd.org/security/advisories/FreeBSD-SA-19:25.mcepsc.asc)
     * MMAP, MProtect provided by [u/zabolekar](https://www.reddit.com/r/BSD/comments/10isrl3/notes_about_mmap_mprotect_and_wx_on_different_bsd/)
         * `cc mmap_protect.c` 
@@ -58,6 +58,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * Set permissions `chmod 750 harden-freebsd.py` to prevent shell injection from another account or process
 * Set permissions `chmod 640 settings.ini` to prevent shell injection from another account or process
 * No `settings.ini` section can be entirely commented out nor be completely empty
+* `./harden-freebsd.py`
 
 
 ## Customization
@@ -70,11 +71,11 @@ If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run
 
 #### Verification
 
-To err on the safe side, the script does primitive verification of the confs flags and some directives it expects. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
+To err on the safe side, the script does primitive verification of the confs flags and some directives *it expects*. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
 
 * Conformance of `hostname` will check that it does not start with a number. Although it is doable in FreeBSD it can cause trouble in some applications and networking instances 
     * If you must have a hostname starting with a number simply remove the check
-* Conformance in use of capital letters in `rc.conf` where it is expected 
+* Conformance in use of capital letters in `rc.conf` and `loader.conf`
 * For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
     * All directives must be in quotes
 
