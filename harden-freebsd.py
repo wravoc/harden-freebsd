@@ -11,8 +11,8 @@ __author__ = "Elias Christopher Griffin"
 __url__ = "https://www.quadhelion.engineering"
 __license__ = "QHELP-OME-NC-ND-NAI"
 __copyright__ = "https://www.quadhelion.engineering/QHELP-OME-NC-ND-NAI.html"
-__version__ = "1.0.1"
-__date__ = "06/01/2023"
+__version__ = "2.0.1"
+__date__ = "06/27/2023"
 __email__ = "elias@quadhelion.engineering"
 __status__ = "Production"
 
@@ -20,7 +20,7 @@ __status__ = "Production"
 
 from pathlib import Path
 from datetime import datetime
-import os, re, subprocess, syslog, configparser, shutil
+import os, re, subprocess, syslog, configparser, shutil, sys
 
 _date = datetime.now()
 date_time = _date.strftime("%m/%d/%Y, %H:%M")
@@ -32,6 +32,7 @@ config.read('settings.ini')
 harden_freebsd_log = Path("/var/log/harden-freebsd.log")
 rc_conf = Path("/etc/rc.conf")
 sysctl_conf = Path("/etc/sysctl.conf")
+loader_conf = Path("/boot/loader.conf")
 login_conf = Path("/etc/login.conf")
 cron_access = Path("/var/cron/allow")
 at_access = Path("/var/at/at.allow")
@@ -40,6 +41,7 @@ at_access = Path("/var/at/at.allow")
 backup_suffix = ".original"
 rc_backup = rc_conf.with_name(rc_conf.name + backup_suffix)
 sysctl_backup = sysctl_conf.with_name(sysctl_conf.name + backup_suffix)
+loader_backup = loader_conf.with_name(loader_conf.name + backup_suffix)
 login_backup = login_conf.with_name(login_conf.name + backup_suffix)
 
 
@@ -66,7 +68,6 @@ def exception_handler(func):
 def writeLog(log_type, content):
     harden_freebsd_logwriter = open(harden_freebsd_log, "a")
     syslog.openlog("LOG_INFO")
-    #syslog.openlog("LOG_INFO")
     if log_type == "script":
         harden_freebsd_logwriter.writelines(content + os.linesep)
     elif log_type == "syslog":
@@ -86,6 +87,7 @@ if config['SCRIPT']['first_run'] == "True":
         at_access.touch()
         rc_backup.write_bytes(rc_conf.read_bytes())
         sysctl_backup.write_bytes(sysctl_conf.read_bytes())
+        loader_backup.write_bytes(loader_conf.read_bytes())
         login_backup.write_bytes(login_conf.read_bytes())
     except FileNotFoundError as e:
         error_path = Path(e.filename)
@@ -108,8 +110,9 @@ if config['SCRIPT']['first_run'] == "True":
             config.write(configfile)
         print(f"\n*********************\033[38;5;76m Success \033[0;0m*************************")
         print(f"Created:")
-        print(f"{cron_access.name}, {at_access.name}, {rc_backup.name} \n")
-        print(f"{sysctl_backup.name}, {login_backup}                 \n")
+        print(f"{cron_access.name}, {at_access.name} \n")
+        print(f"Backups Made:")
+        print(f", {rc_backup.name}, {sysctl_backup.name}, {login_backup.name}, {loader_backup.name},                \n")
         print(f"*******************************************************\n")
 
 
@@ -119,6 +122,7 @@ try:
     rc_content = rc_conf.read_text(encoding="utf-8")
     sysctl_content = sysctl_conf.read_text(encoding="utf-8")
     login_content = login_conf.read_text(encoding="utf-8")
+    loader_content = loader_conf.read_text(encoding="utf-8")
 except FileNotFoundError as e:
     error_path = Path(e.filename)
     writeLog("script", "Error finding file " + error_path)
@@ -131,6 +135,7 @@ except PermissionError as e:
     print(f"Permission to read/append {e}")
     print(f"{os.stat(rc_conf)}{os.linesep}")
     print(f"{os.stat(sysctl_conf)}{os.linesep}")
+    print(f"{os.stat(loader_conf)}{os.linesep}")
     print(f"{os.stat(cron_access)}{os.linesep}")
     print(f"{os.stat(at_access)}{os.linesep}")
     print(f"{os.stat(login_conf)}{os.linesep}")
@@ -174,7 +179,7 @@ class Conf:
             print(f"{e}")
             print(f"*******************************************************\n")
         else:
-            print(f"\033[38;5;208m {self.setting} \033[0;0m changed to \033[38;5;208m {self.flag} \033[0;0m  in \033[38;5;75m {self.file} \033[0;0m ")
+            print(f"\033[38;5;208m {self.setting} \033[0;0m changed to\033[38;5;208m {self.flag}\033[0;0m  in\033[38;5;75m {self.file}\033[0;0m ")
     
     # Appends at the end of a file a directive that was not present previously
     def addConf(self):
@@ -213,7 +218,7 @@ class Conf:
     def verifyConf(self): 
         global conf_directives
         conf_directives = []
-        sysctl_conf_verify = re.compile(r'[0-9]+')
+        sysctl_conf_verify = re.compile(r'-?[0-9]+')
         try:
             with open(self.file, 'r+') as file_content:
                 lines = file_content.readlines()
@@ -225,34 +230,46 @@ class Conf:
                         pass
                     elif partitioned_line[1] != "=":
                         print(f"\n*******************************************************")
-                        print(f"Error at {lines[i]}: No equality operator. Restoring original.")
+                        print(f"Error at {lines[i]}: No equality operator. Restored original.")
                         print(f"*******************************************************\n")
                         self.restoreConf()
                         writeLog("script", "No equality operator at line " + lines[i] + " in " + self.file.name)
+                        sys.exit()
                     elif self.file == rc_conf and line.startswith("hostname") and re.match(r'^\"[A-Za-z]+[0-9]?\"$', partitioned_line[2]) == None:
                         print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed for hostname. Restoring original.")
+                        print(f"Error: {self.flag} not allowed for hostname. Restored original.")
                         print(f"*******************************************************\n")
                         self.restoreConf()
                         writeLog("script", "Hostname improper, starts with number " + lines[i] + " in " + self.file.name)
+                        sys.exit()
                     elif self.file == rc_conf and line.startswith("syslogd_flags") and re.match(r'^\"-?[a-z]+\"$', partitioned_line[2]) == None:
                         print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed in syslogd_flags. Restoring original.")
+                        print(f"Error: {self.flag} not allowed in syslogd_flags. Restored original.")
                         print(f"*******************************************************\n")
                         self.restoreConf()
                         writeLog("script", "Syslog_flags flag problem " + lines[i] + " in " + self.file.name)
+                        sys.exit()
                     elif self.file == rc_conf and not line.startswith("syslogd_flags") and not line.startswith("hostname") and re.match(r'^\"[A-Z]+\"$', partitioned_line[2]) == None:
                         print(f"\n*******************************************************")
-                        print(f"Error: {self.flag} not allowed not allowed in {lines[i]} in {self.file}. Restoring original.")
+                        print(f"Error: {self.flag} not allowed not allowed in {lines[i]} in {self.file}. Restored original.")
                         print(f"*******************************************************\n")
                         self.restoreConf()
                         writeLog("script", "Error at line " + lines[i] + " in " + self.file.name + ". Write all flags in capital letters")
+                        sys.exit()
+                    elif self.file == loader_conf and re.match(r'([\"]+[0-9]?[A-Z]*[\"]+)', partitioned_line[2]) == None:
+                        self.restoreConf()
+                        print(f"\n*******************************************************")
+                        print(f"Error: {self.flag} not allowed in {lines[i]} in {self.file}. Restored original.")
+                        print(f"*******************************************************\n")
+                        writeLog("script", "Loader.conf matching error at line " + lines[i] + ". Flags must be in quotes per man loader.conf")
+                        sys.exit()
                     elif self.file == sysctl_conf and re.match(sysctl_conf_verify, partitioned_line[2]) == None:
                         self.restoreConf()
                         print(f"\n*******************************************************")
-                        print(f"Error setting flag {self.flag} not allowed in {lines[i]} in {self.file}. Restoring original.")
+                        print(f"Error: {self.flag} not allowed in {lines[i]} in {self.file}. Restored original.")
                         print(f"*******************************************************\n")
-                        writeLog("script", "Sysctl matching error at line " + lines[i])
+                        writeLog("script", "Loader.conf matching error at line " + lines[i])
+                        sys.exit()
                     else:
                         conf_directives.append(line.rstrip())
         except OSError as e:
@@ -271,6 +288,8 @@ class Conf:
                 shutil.copy(rc_backup, rc_conf)
             elif self.file == sysctl_conf:
                 shutil.copy(sysctl_backup, sysctl_conf)
+            elif self.file == loader_conf:
+                shutil.copy(loader_backup, loader_conf)
         except FileNotFoundError as e:
             error_path = Path(e.filename)
             print(f"\n*******************\033[38;5;1m File Not Found \033[0;0m********************")
@@ -284,7 +303,7 @@ class Conf:
 
 
 
-# Hardcoded to STARTUP and SYSTEM sections as only those contain flags we can dynamically set and re-set.
+# Hardcoded sections as only those contain flags we can dynamically set and re-set.
 # Loops through all directives and sets each
 class SetOpts:
     def __init__(self, section):
@@ -293,6 +312,8 @@ class SetOpts:
             file = rc_conf
         elif self.section == "SYSTEM":
             file = sysctl_conf
+        elif self.section == "KERNEL":
+            file = loader_conf
         else:
             pass
 
@@ -347,11 +368,14 @@ def setChmod(file, setting):
 writeLog("script", date_time)
 SetOpts("STARTUP")
 SetOpts("SYSTEM")
+SetOpts("KERNEL")
 shellCommand("FILESEC")
 shellCommand("USERSEC")
 
 
 # Write succesfull completion to console and syslog
-writeLog("script", "All directives validate")
+writeLog("script", "************ SUCCESS ************")
+writeLog("script", "All files and directives validate")
+writeLog("script", "*********************************")
 writeLog("syslog", "SUCCESS: Hardening completed")
 

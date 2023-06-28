@@ -1,2 +1,0 @@
-June 23, 2023
-64bit ASLR setting was reverted back to 32bit enable as 64bit is enabled by default.

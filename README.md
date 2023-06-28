@@ -2,10 +2,29 @@
 
 ![](images/harden-freebsd-logo.jpg)
 
-FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script will duplicate almost all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning your system, and easy to use across jails. 
+FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script is will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning your system, and easy to use across jails. 
 
-Even though I am by no means a FreeBSD expert, each of the security settings was researched, assessed and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability. 
+This script is also targeted to new users of FreeBSD so that they may leverage years of security contributions by the entire BSD community across all spectra, implemented on thier system in seconds.
 
+Each of the security settings was researched, assessed, and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability.
+
+
+## New Features in 2.0.1
+* Now sets `/boot/loader.conf` in order to load kernel security features early in initialization
+* New security settings
+* Additional software included to verify the implementation
+
+*Full [Changelog](Changelog.md)*
+
+
+## Addtional Software
+* Scripts included to check for Vulnerabilities 
+    * Kernel vulnerablities provided by [Stéphane Lesimple](https://github.com/speed47) spectre-meltdown-checker
+        * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, CVE-2018-12207
+    * MMAP, MProtect provided by [u/zabolekar](https://www.reddit.com/r/BSD/comments/10isrl3/notes_about_mmap_mprotect_and_wx_on_different_bsd/)
+        * `cc mmap_protect.c` 
+        * `./a.out`
+        * You should have two successes
 
 
 ## Features
@@ -23,36 +42,42 @@ Even though I am by no means a FreeBSD expert, each of the security settings was
 * System Logging to `/var/log/messages` and Script Logging to `/var/log/harden-freebsd.log`
 * Pretty prints color output of script execution to console while running
 
-## Requirements
 
+## Requirements
 * FreeBSD 13.2
 * Python 3.9.16
+
 
 ## Installation
 
 **WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 or 0 and rebooted!**
 
-* Set `kernlevel = 0` if you want to test various setting groups with your applications and network
+**NOTE** Enforces the style format of `loader.conf` listed in the manual and `/boot/defaults/loader.conf` being that flags must in encased **with quotes** and normalized with capital letters.
+
+* Set `kernlevel = -1` if you want to test various setting groups with your applications and network
 * Customize `settings.ini`  to whatever is needed, the script will change the directive to your flag
 * Set permissions `chmod 750 harden-freebsd.py` to prevent shell injection from another account or process
 * Set permissions `chmod 640 settings.ini` to prevent shell injection from another account or process
 * No `settings.ini` section can be entirely commented out nor be completely empty
 
+
 ## Customization
 
 #### Backups
 
-The very first time the script is run it will make copies of `rc.conf`, `sysctl.conf`, and `login.conf` named `rc.conf.original` etc. If you've already done this yourself you may want to rename or move those files.
+The very first time the script is run it will make copies of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` named `rc.conf.original` etc. If you've already done this yourself you may want to rename or move those files.
 
 If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run` to `True` with capital `T` to make new backups at any time after you've renamed the original backups or the script will overwrite them.
 
 #### Verification
 
-To err on the safe side, the script does primitive verification of the `rc.conf` and `sysctl.conf` flags and some directives it expects. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
+To err on the safe side, the script does primitive verification of the confs flags and some directives it expects. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
 
 * Conformance of `hostname` will check that it does not start with a number. Although it is doable in FreeBSD it can cause trouble in some applications and networking instances 
-  * If you must have a hostname starting with a number simply remove the check
+    * If you must have a hostname starting with a number simply remove the check
 * Conformance in use of capital letters in `rc.conf` where it is expected 
+* For `/boot/loader.conf` strictly verifiies syntax from man and `/boot/defaults/loader.conf` syntax
+    * All directives must be in quotes
 
 If you do get stuck in read-only single-user mode and need to correct a configuration file then use:
 
@@ -60,7 +85,6 @@ If you do get stuck in read-only single-user mode and need to correct a configur
 zfs set readonly=false zroot
 zfs mount -a
 ```
-
 #### Chmod-ability
 
 The set of files needed to be secure changed and changed throughout testing and so it ended up as a shell command but an error checked function was provided for the administrator programmer to use instead of appending to the long list in `settings.ini` section `[FILESEC]` if you wish or to work with other software.
@@ -86,6 +110,7 @@ The newly applied settings will not take affect until you reset your password.
    - `security.jail.* = 0`
 4. Use mutiple copies of the script and settings.ini for each jail
 5. Put it in your template
+
 
 ## Setting Descriptors
 **Startup**
@@ -140,22 +165,43 @@ The newly applied settings will not take affect until you reset your password.
 * hw.mds_disable = 1 [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
     * Enable Microarchitectural Data Sampling Mitigation version `VERW`
     * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
+* hw.spec_store_bypass_disable = 1 [(*)](https://handwiki.org/wiki/Speculative_Store_Bypass)
+    * Disallow Speculative Bypass used by Spectre and Meltdown
+* kern.elf64.allow_wx = 0 [(*)](https://www.ibm.com/docs/en/aix/7.2?topic=memory-understanding-mapping)
+    * Disallow write and execute for shared memory
+
+
+**Kernel**
+* security.bsd.allow_destructive_dtrace
+    * Disallow DTrace to terminate proccesses
+    * Test DTrace hardening: Using all 3 commands should result in `Permission denied` or `Destructive actions not allowed`:
+    * `dtrace -wn 'tcp:::connect-established { @[args[3]->tcps_raddr] = count(); }'`
+    * `dtrace -wqn tick-1sec'{system("date")}'`
+    * `dtrace -qn tick-1sec'{system("date")}'`
 * hw.ibrs_disable = 1 [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
     * Prevent Spectre and Meltdown CPU Vulnerabilities
 * kern.elf32.aslr.stack = 3 [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
     * Address space layout randomization is used to increase the difficulty of performing a buffer overflow attack
     * 64bit is enabled by default in 13.2 so you can set this to 0 for 64bit processors or remove
+* kern.elf64.aslr.pie_enable = "1"
+    * Enable ASLR for Position-Independent Executables (PIE) binaries
+* vm.pmap.pti = 1 [(*)](https://www.freebsd.org/security/advisories/FreeBSD-EN-18:07.pmap.asc)
+    * Disallow userspace to kernel page table mapping preventing Meltdown
+* cpu_microcode_load = "NO"
+    * Disallow automatic CPU Microcode updates
 
 
 ## License Summary
 
 Non-Commercial usage, retain and forward author and license data. Modify existing code as needed up to 25% while allowing unlimited new additions. The Software may use or be used by other software.
 
+
 ## Security Guidelines
 
 Since this Software uses shell commands it is required to place it in a secure directory with permissions on the **parent** directory to have no permissions for `other` /all/world group to *execute* and **no network access**. 
 
 Please follow [these guidelines](/docs/SECURITY.md) should you find a vulnerability not addressed in the audit.
+
 
 ## Statement of Security: 
 
@@ -165,6 +211,7 @@ Please follow [these guidelines](/docs/SECURITY.md) should you find a vulnerabil
 This script has no networking, accesses no sockets, and uses only standard libraries.
 
 Although this script is using `subprocess.run(shell=True)` the only possibility of shell injection is from the paths customized by the Licensee or unauthorized access to the filesystem the script resides on in order to perform unauthorized modifications to `settings.ini`or the Software which is not a vulnerability of the Software. 
+
 
 ### Latest Development Version
 
