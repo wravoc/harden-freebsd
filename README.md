@@ -63,6 +63,9 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ## Customization
 
+#### 64bit vs 32bit
+This script is targeted to 64bit so wherever you see a directive that says 64 change to 32 if you are on a 32bit processor.
+
 #### Backups
 
 The very first time the script is run it will make copies of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` named `rc.conf.original` etc. If you've already done this yourself you may want to rename or move those files.
