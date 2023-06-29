@@ -44,7 +44,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 
 ## Requirements
-* FreeBSD 13.1
+* FreeBSD 13.1, 13.2
 * Python 3.9.16
 
 
