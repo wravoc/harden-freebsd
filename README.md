@@ -76,7 +76,7 @@ If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run
 
 #### Verification
 
-To err on the safe side, the script does primitive verification of the confs flags and some directives *it expects*. If may error on some abnormal directives which will cause it to put in place the backup *.original files it made. Check the log for what setting caused the validation failure and rewrite the regular expression or make a new check.
+To err on the safe side, the script does primitive verification of the confs flags. Check the log for any validation failures and rewrite the regular expression or make a new check.
 
 * For `/etc/sysctl.conf` the script checks for no quotes
 * For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
