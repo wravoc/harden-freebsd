@@ -100,19 +100,20 @@ Those files are:
 
 The newly applied settings will not take affect until you reset your password.
 
-## Automatic Jail Lockdown/Management
+## Automatic Jail Lockdown/Management Stragegies
 
-1. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon next reboot. To update all jails simply copy `settings.ini` with your own script to all appropriate locations for intake. 
+1. Set the correct paths to jailed confs in `harden-freebsd.py` lines 32-38 and run for each jail.
+2. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon next reboot. To update all jails simply copy `settings.ini` with your own copy script to all appropriate locations for uptake. 
 
 `crontab -e`
 
 `@reboot /path/to/harden-freebsd.py`
 
-2. Have all jails pointing to the same rc script via `exec.start` and set paths in the script pointing to the same location modified by the script paths. 
-3. Add new jail specific entires to `settings.ini [SYSTEM]` section for sysctl.conf udpate
+3. Have all jails pointing to the same rc script via `exec.start` and set paths in the script pointing to the same location modified by the script paths. 
+4. Add new jail specific entires to `settings.ini [SYSTEM]` section for sysctl.conf udpate
    - `security.jail.* = 0`
-4. Use mutiple copies of the script and settings.ini for each jail
-5. Put it in your template
+5. Use mutiple copies of the script and settings.ini for each jail
+6. Put it in your template
 
 
 ## Setting Descriptors
