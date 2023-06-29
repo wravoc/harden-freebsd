@@ -100,7 +100,7 @@ Those files are:
 
 The newly applied settings will not take affect until you reset your password.
 
-## Automatic Jail Lockdown/Management Stragegies
+## Automatic Jail Lockdown/Management Strategies
 
 1. Set the correct paths to jailed confs in `harden-freebsd.py` lines 32-38 and run for each jail.
 2. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon next reboot. To update all jails simply copy `settings.ini` with your own copy script to all appropriate locations for uptake. 
