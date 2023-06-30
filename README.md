@@ -153,7 +153,7 @@ The newly applied settings will not take affect until you reset your password.
 * `security.bsd.unprivileged_read_msgbuf = 0` (Sysctl MIB Entry `sysctl -a | grep security.bsd`)
     * Disallow non-root users from reading system message buffer
 * `kern.randompid = 107` [(*)](https://wiki.freebsd.org/DevSummit/201308/Security)
-    * Force kernel to randomize process ID's using above salt value instead of seqential
+    * Force kernel to randomize process ID's using above salt value instead of sequential
 * `net.inet.ip.random_id = 1`
     * Randomize IP packet ID
 * `net.inet.ip.redirect = 0` 
@@ -200,7 +200,7 @@ Non-Commercial usage, retain and forward author and license data. Modify existin
 
 ## Security Guidelines
 
-Since this Software uses shell commands it is required to place it in a secure directory with permissions on the **parent** directory to have no permissions for `other` /all/world group to *execute* and **no network access**. 
+Since this Software uses shell commands it is required to place it in a secure directory with permissions on the **parent** directory to have no permissions for `other` /all/world group to write or *execute* and **no network access**. 
 
 Please follow [these guidelines](/docs/SECURITY.md) should you find a vulnerability not addressed in the audit.
 
