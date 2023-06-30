@@ -36,7 +36,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * Disables sendmail completely
 * Removes `other` write permissions from key system files and folders
 * Allows only root for `cron` and `at`
-* Primitive directive and flag verification catches simple errors
+* Primitive flag verification catches simple errors
 * Modularizable within other tools
 * Automate any shell script
 * System Logging to `/var/log/messages` and Script Logging to `/var/log/harden-freebsd.log`
@@ -50,7 +50,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ## Installation
 
-**WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 or 0 and rebooted!**
+**WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 and rebooted!**
 
 * Set `kernlevel = -1` if you want to test various setting groups with your applications and network
 * Customize `settings.ini`  to whatever is needed, the script will change the directive to your flag
