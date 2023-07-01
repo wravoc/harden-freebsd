@@ -1,1 +1,1 @@
-spectre-meltdown-checker.sh -linguist-vendored
+spectre-meltdown-checker.sh linguist-generated=true
