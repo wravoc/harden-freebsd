@@ -166,7 +166,7 @@ The newly applied settings will not take affect until you reset your password.
     * Disallows TCP to determine the minimum MTU size on any network that is currently in the path between two hosts
 * `net.inet.icmp.drop_redirect = 1`
     * Pairs with rc.conf startup, as once enabled, it is then set
-* `hw.mds_disable = 1` [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
+* `hw.mds_disable = 3` [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
     * Enable Microarchitectural Data Sampling Mitigation version `VERW`
     * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
 * `hw.spec_store_bypass_disable = 1` [(*)](https://handwiki.org/wiki/Speculative_Store_Bypass)

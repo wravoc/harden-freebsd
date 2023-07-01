@@ -15,7 +15,8 @@ June 27, 2023
 * Some sysctl.conf settings moved over to loader.conf section for better security
 
 June 28, 2023
-* Changed requirements to be 13.1 as this is where most security directives were added
+* Changed requirements to be 13.1, 13.2 as this is when most security directives were added
 * Remove much conf syntax verification to work on all FreeBSD confs instead of just default installs
 * Reverted 64bit ASLR protections to 32bit since these were on by default since 13.1
-* Removed `vm.pmap.pti = "1"` since this was on my default
+* `hw.mds_disable` was set at 3, AUTO
+* Removed `vm.pmap.pti = "1"` since this was on by default
