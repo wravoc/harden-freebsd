@@ -9,7 +9,7 @@ This script is also targeted to new users of FreeBSD so that they may leverage y
 Each of the security settings was researched, assessed, and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability.
 
 
-## New Features in 2.0.1
+## New Features in 2.0.2
 * Now sets `/boot/loader.conf` in order to load kernel security features early in initialization
 * New security settings
 * Additional software included to verify the implementation
