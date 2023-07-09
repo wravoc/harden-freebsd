@@ -60,6 +60,23 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * `./harden-freebsd.py`
 
 
+## Conf File Verification
+
+`kern.vty = "vt"`
+
+This script does primitive verification of the confs flags in strict accordance with system man. Many online tutorials even on the FreeBSD family of websites do not use the proper syntax. Check the log for any validation failures. Use proper syntax, remove the syntax checking lines 241-261, or rewrite the regular expression to make a new check suitable for you.
+
+* For `/etc/sysctl.conf` the script checks for no quotes
+* For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
+    * All directives in these sister confs must be in quotes
+
+If you do get stuck in read-only single-user mode and need to correct a configuration file then use:
+
+```sh
+zfs set readonly=false zroot
+zfs mount -a
+```
+
 ## Customization
 
 #### 64bit vs 32bit
@@ -74,21 +91,7 @@ The very first time the script is run it will make copies of `rc.conf`, `sysctl.
 
 If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run` to `True` with capital `T` to make new backups at any time after you've renamed the original backups or the script will overwrite them.
 
-#### Verification
 
-To err on the safe side, the script does primitive verification of the confs flags. Check the log for any validation failures and rewrite the regular expression or make a new check.
-
-* For `/etc/sysctl.conf` the script checks for no quotes
-* For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
-    * All directives in these sister confs must be in quotes
-    * `kern.vty = "vt"`
-
-If you do get stuck in read-only single-user mode and need to correct a configuration file then use:
-
-```sh
-zfs set readonly=false zroot
-zfs mount -a
-```
 #### Chmod-ability
 
 The set of files needed to be secure changed and changed throughout testing and so it ended up as a shell command but an error checked function was provided for the administrator programmer to use instead of appending to the long list in `settings.ini` section `[FILESEC]` if you wish or to work with other software.
