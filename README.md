@@ -81,6 +81,7 @@ To err on the safe side, the script does primitive verification of the confs fla
 * For `/etc/sysctl.conf` the script checks for no quotes
 * For `/boot/loader.conf` the script strictly verifies syntax from man and `/boot/defaults/loader.conf` syntax
     * All directives in these sister confs must be in quotes
+    * `kern.vty = "vt"`
 
 If you do get stuck in read-only single-user mode and need to correct a configuration file then use:
 
