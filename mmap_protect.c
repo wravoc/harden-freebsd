@@ -16,7 +16,7 @@ int main()
     }
     else
     {
-        puts("VULNERABLE: Writable and executable memory mapped successfully");
+        puts("\033[38;5;1mVULNERABLE\033[0;0m: Writable and executable memory mapped successfully");
         munmap(p, 1);
     }
 
@@ -37,7 +37,7 @@ int main()
         if (mprotect(p, 1, PROT_WRITE|PROT_EXEC))
             perror("\n*********************\033[38;5;76m Success \033[0;0m*************************\n Can't make shared memory writable and executable\n*******************************************************\n");
         else
-            puts("VULNERABLE: Shared memory successfully made writable and executable");
+            puts("\033[38;5;1mVULNERABLE\033[0;0m: Shared memory successfully made writable and executable");
 
         munmap(p, 1);
     }
