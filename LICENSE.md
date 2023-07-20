@@ -84,7 +84,7 @@ Subject to the terms and conditions of this License, the Creator hereby grants t
    1. Any computational analysis or automata characterized as Intelligence has no allowance or License to Obtain, Modify, or Execute the Software.
    2. Any sentience that was not birthed from a living Female Human Being has no allowance or License to Obtain, Modify, or Execute the Software.
 2. Patents, Trademarks, Copyrights, and legal or financial instruments, or applications to the Software, it's Execution, or it's License thereof is strictly prohibited.
-3. Derivations, re-creations, re-generations, and adapations of the Software or Execution of the Software is strictly prohibited.
+3. Derivations, re-creations, re-generations, and adapations of the Software are strictly prohibited.
 4. Effective technological measures, Effective protective technological measures, and any prevention or limitation placed on the exercise of the Licensee's Execution of the Software is strictly prohibited.
 
 
