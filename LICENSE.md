@@ -25,7 +25,7 @@ Non-Commercial usage, retain and forward author and license data. Modify existin
 ### Section 1 – Definitions.
 
 * **Universal** is defined as all the states of existence. If exists, this License applies.
-* **Software** is defined as means used to produce a desired result on a calculating device accompying and referencing this License.
+* **Software** is defined as means used to produce a desired result on a calculating device accompanying and referencing this License.
 * **Creator** is defined as the natural human being that created the Software here designed in his mind and written down to Obtain and Execute.
 * **License** is defined as what all entities other than the Creator of the Software allows to be done with the software.
 * **Licensee** is defined as all entities other than the Creator of the Software.
@@ -84,7 +84,7 @@ Subject to the terms and conditions of this License, the Creator hereby grants t
    1. Any computational analysis or automata characterized as Intelligence has no allowance or License to Obtain, Modify, or Execute the Software.
    2. Any sentience that was not birthed from a living Female Human Being has no allowance or License to Obtain, Modify, or Execute the Software.
 2. Patents, Trademarks, Copyrights, and legal or financial instruments, or applications to the Software, it's Execution, or it's License thereof is strictly prohibited.
-3. Derivations, re-creations, re-generations, and adapations of the Software are strictly prohibited.
+3. Derivations, re-creations, re-generations, and adaptations of the Software are strictly prohibited.
 4. Effective technological measures, Effective protective technological measures, and any prevention or limitation placed on the exercise of the Licensee's Execution of the Software is strictly prohibited.
 
 
