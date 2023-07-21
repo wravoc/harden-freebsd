@@ -44,7 +44,7 @@ The software **may not** be modified in the following ways:
 * Changing or replacing of **more than 25%** of the existing programming code of the Software is **not allowed**. This does not include Error Handling.
 * Programming language comments cannot be modified.
 * Author and License information cannot be modified.
-* You may not adapt, translate, reverse engineer, decompile, disassemble, or otherwise reuse the software logic or logic designs in the Software. 
+* You may not adapt, translate, reverse engineer, decompile, disassemble, or otherwise reuse the Software logic or logic designs in the Software. 
 * The Software may not be re-created or re-generated in whole or in part in another programming language or by any means except by permission of the Creator.
 
 **The Software may be modified in the following ways:**
