@@ -12,7 +12,7 @@
 #
 # Stephane Lesimple
 #
-VERSION='0.45'
+VERSION='0.46'
 
 trap 'exit_cleanup' EXIT
 trap '_warn "interrupted, cleaning up..."; exit_cleanup; exit 1' INT
@@ -25,6 +25,7 @@ exit_cleanup()
 	[ -n "${kerneltmp2:-}"    ] && [ -f "$kerneltmp2"    ] && rm -f "$kerneltmp2"
 	[ -n "${mcedb_tmp:-}"     ] && [ -f "$mcedb_tmp"     ] && rm -f "$mcedb_tmp"
 	[ -n "${intel_tmp:-}"     ] && [ -d "$intel_tmp"     ] && rm -rf "$intel_tmp"
+	[ -n "${linuxfw_tmp:-}"   ] && [ -f "$linuxfw_tmp"   ] && rm -f "$linuxfw_tmp"
 	[ "${mounted_debugfs:-}" = 1 ] && umount /sys/kernel/debug 2>/dev/null
 	[ "${mounted_procfs:-}"  = 1 ] && umount "$procfs" 2>/dev/null
 	[ "${insmod_cpuid:-}"    = 1 ] && rmmod cpuid 2>/dev/null
@@ -86,13 +87,15 @@ show_usage()
 		--batch nrpe		produce machine readable output formatted for NRPE
 		--batch prometheus      produce output for consumption by prometheus-node-exporter
 
-		--variant VARIANT	specify which variant you'd like to check, by default all variants are checked
-					VARIANT can be one of 1, 2, 3, 3a, 4, l1tf, msbds, mfbds, mlpds, mdsum, taa, mcepsc, srbds
-					can be specified multiple times (e.g. --variant 2 --variant 3)
-		--cve [cve1,cve2,...]	specify which CVE you'd like to check, by default all supported CVEs are checked
+		--variant VARIANT	specify which variant you'd like to check, by default all variants are checked.
+					can be used multiple times (e.g. --variant 3a --variant l1tf)
+					for a list of supported VARIANT parameters, use --variant help
+		--cve CVE		specify which CVE you'd like to check, by default all supported CVEs are checked
+					can be used multiple times (e.g. --cve CVE-2017-5753 --cve CVE-2020-0543)
 		--hw-only		only check for CPU information, don't check for any variant
 		--no-hw			skip CPU information and checks, if you're inspecting a kernel not to be run on this host
 		--vmm [auto,yes,no]	override the detection of the presence of a hypervisor, default: auto
+		--no-intel-db		don't use the builtin Intel DB of affected processors
 		--allow-msr-write	allow probing for write-only MSRs, this might produce kernel logs or be blocked by your system
 		--cpu [#,all]		interact with CPUID and MSR of CPU core number #, or all (default: CPU core 0)
 		--update-fwdb		update our local copy of the CPU microcodes versions database (using the awesome
@@ -116,24 +119,27 @@ show_disclaimer()
 Disclaimer:
 
 This tool does its best to determine whether your system is immune (or has proper mitigations in place) for the
-collectively named "speculative execution" vulnerabilities. It doesn't attempt to run any kind of exploit, and can't guarantee
-that your system is secure, but rather helps you verifying whether your system has the known correct mitigations in place.
+collectively named "transient execution" (aka "speculative execution") vulnerabilities that started to appear
+since early 2018 with the infamous Spectre & Meltdown.
+
+This tool does NOT attempt to run any kind of exploit, and can't 100% guarantee that your system is secure,
+but rather helps you verifying whether your system has the known correct mitigations in place.
 However, some mitigations could also exist in your kernel that this script doesn't know (yet) how to detect, or it might
 falsely detect mitigations that in the end don't work as expected (for example, on backported or modified kernels).
 
-Your system exposure also depends on your CPU. As of now, AMD and ARM processors are marked as immune to some or all of these
-vulnerabilities (except some specific ARM models). All Intel processors manufactured since circa 1995 are thought to be vulnerable,
-except some specific/old models, such as some early Atoms. Whatever processor one uses, one might seek more information
-from the manufacturer of that processor and/or of the device in which it runs.
+Your system affectability to a given vulnerability depends on your CPU model and CPU microcode version, whereas the
+mitigations in place depend on your CPU (model and microcode), your kernel version, and both the runtime configuration
+of your CPU (through bits set through the MSRs) and your kernel. The script attempts to explain everything for each
+vulnerability, so you know where your system stands. For a given vulnerability, detailed information is sometimes
+available using the \`--explain\` switch.
 
-The nature of the discovered vulnerabilities being quite new, the landscape of vulnerable processors can be expected
-to change over time, which is why this script makes the assumption that all CPUs are vulnerable, except if the manufacturer
-explicitly stated otherwise in a verifiable public announcement.
+Please also note that for the Spectre-like vulnerabilities, all software can possibly be exploited, in which case
+this tool only verifies that the kernel (which is the core of the system) you're using has the proper protections
+in place. Verifying all the other software is out of the scope of this tool, as it can't be done in a simple way.
+As a general measure, ensure you always have the most up to date stable versions of all the software you use,
+especially for those who are exposed to the world, such as network daemons and browsers.
 
-Please also note that for Spectre vulnerabilities, all software can possibly be exploited, this tool only verifies that the
-kernel (which is the core of the system) you're using has the proper protections in place. Verifying all the other software
-is out of the scope of this tool. As a general measure, ensure you always have the most up to date stable versions of all
-the software you use, especially for those who are exposed to the world, such as network daemons and browsers.
+For more information and answers to related questions, please refer to the FAQ.md file.
 
 This tool has been released in the hope that it'll be useful, but don't use it to jump to conclusions about your security.
 
@@ -165,12 +171,13 @@ opt_cpu=0
 opt_explain=0
 opt_paranoid=0
 opt_mock=0
+opt_intel_db=1
 
 global_critical=0
 global_unknown=0
 nrpe_vuln=''
 
-supported_cve_list='CVE-2017-5753 CVE-2017-5715 CVE-2017-5754 CVE-2018-3640 CVE-2018-3639 CVE-2018-3615 CVE-2018-3620 CVE-2018-3646 CVE-2018-12126 CVE-2018-12130 CVE-2018-12127 CVE-2019-11091 CVE-2019-11135 CVE-2018-12207 CVE-2020-0543'
+supported_cve_list='CVE-2017-5753 CVE-2017-5715 CVE-2017-5754 CVE-2018-3640 CVE-2018-3639 CVE-2018-3615 CVE-2018-3620 CVE-2018-3646 CVE-2018-12126 CVE-2018-12130 CVE-2018-12127 CVE-2019-11091 CVE-2019-11135 CVE-2018-12207 CVE-2020-0543 CVE-2023-20593'
 
 # find a sane command to print colored messages, we prefer `printf` over `echo`
 # because `printf` behavior is more standard across Linux/BSD
@@ -295,6 +302,7 @@ cve2name()
 		CVE-2019-11135) echo "ZombieLoad V2, TSX Asynchronous Abort (TAA)";;
 		CVE-2018-12207) echo "No eXcuses, iTLB Multihit, machine check exception on page size changes (MCEPSC)";;
 		CVE-2020-0543) echo "Special Register Buffer Data Sampling (SRBDS)";;
+		CVE-2023-20593) echo "Zenbleed, cross-process information leak";;
 		*) echo "$0: error: invalid CVE '$1' passed to cve2name()" >&2; exit 255;;
 	esac
 }
@@ -319,6 +327,7 @@ _is_cpu_affected_cached()
 		CVE-2019-11135) return $variant_taa;;
 		CVE-2018-12207) return $variant_itlbmh;;
 		CVE-2020-0543) return $variant_srbds;;
+		CVE-2023-20593) return $variant_zenbleed;;
 		*) echo "$0: error: invalid variant '$1' passed to is_cpu_affected()" >&2; exit 255;;
 	esac
 }
@@ -330,6 +339,44 @@ is_cpu_affected()
 	# (note that in shell, a return of 0 is success)
 	# by default, everything is affected, we work in a "whitelist" logic here.
 	# usage: is_cpu_affected CVE-xxxx-yyyy && do something if affected
+
+	# if CPU is Intel and is in our dump of the Intel official affected CPUs page, use it:
+	if is_intel; then
+		cpuid_hex=$(printf "0x%08X" $(( cpu_cpuid )) )
+		if [ "${intel_line:-}" = "no" ]; then
+			_debug "is_cpu_affected: $cpuid_hex not in Intel database (cached)"
+		elif [ -z "$intel_line" ]; then
+			intel_line=$(read_inteldb | grep -F "$cpuid_hex," | head -n1)
+			if [ -z "$intel_line" ]; then
+				intel_line=no
+				_debug "is_cpu_affected: $cpuid_hex not in Intel database"
+			fi
+		fi
+		if [ "$intel_line" != "no" ]; then
+			_result=$(echo "$intel_line" | grep -Eo ,"$(echo "$1" | cut -c5-)"'=[^,]+' | cut -d= -f2)
+			_debug "is_cpu_affected: inteldb for $1 says '$_result'"
+
+			# handle special case for Foreshadow SGX (CVE-2018-3615):
+			# even if we are affected to L1TF (CVE-2018-3620/CVE-2018-3646), if there's no SGX on our CPU,
+			# then we're not affected to the original Foreshadow.
+			if [ "$1" = "CVE-2018-3615" ] && [ "$cpuid_sgx" = 0 ]; then
+				# not affected
+				return 1
+			fi
+			# /special case
+
+			if [ "$_result" = "N" ]; then
+				# not affected
+				return 1
+			elif [ -n "$_result" ]; then
+				# non-empty string != N means affected
+				return 0
+			fi
+		fi
+	fi
+
+	# Otherwise, do it ourselves
+
 	if [ "$is_cpu_affected_cached" = 1 ]; then
 		_is_cpu_affected_cached "$1"
 		return $?
@@ -348,6 +395,8 @@ is_cpu_affected()
 	variant_taa=''
 	variant_itlbmh=''
 	variant_srbds=''
+	# Zenbleed if extremely AMD specific, look for "is_and" below:
+	variant_zenbleed=immune
 
 	if is_cpu_mds_free; then
 		[ -z "$variant_msbds" ] && variant_msbds=immune
@@ -469,6 +518,11 @@ is_cpu_affected()
 			_debug "is_cpu_affected: cpu not affected by speculative store bypass so not vuln to variant4"
 		fi
 		variantl1tf=immune
+
+		# Zenbleed
+		amd_legacy_erratum "$(amd_model_range 0x17 0x30 0x0 0x4f 0xf)" && variant_zenbleed=vuln
+		amd_legacy_erratum "$(amd_model_range 0x17 0x60 0x0 0x7f 0xf)" && variant_zenbleed=vuln
+		amd_legacy_erratum "$(amd_model_range 0x17 0xa0 0x0 0xaf 0xf)" && variant_zenbleed=vuln
 	elif [ "$cpu_vendor" = CAVIUM ]; then
 		variant3=immune
 		variant3a=immune
@@ -611,19 +665,20 @@ is_cpu_affected()
 	fi
 
 	_debug "is_cpu_affected: temp results are <$variant1> <$variant2> <$variant3> <$variant3a> <$variant4> <$variantl1tf>"
-	[ "$variant1"       = "immune" ] && variant1=1       || variant1=0
-	[ "$variant2"       = "immune" ] && variant2=1       || variant2=0
-	[ "$variant3"       = "immune" ] && variant3=1       || variant3=0
-	[ "$variant3a"      = "immune" ] && variant3a=1      || variant3a=0
-	[ "$variant4"       = "immune" ] && variant4=1       || variant4=0
-	[ "$variantl1tf"    = "immune" ] && variantl1tf=1    || variantl1tf=0
-	[ "$variant_msbds"  = "immune" ] && variant_msbds=1  || variant_msbds=0
-	[ "$variant_mfbds"  = "immune" ] && variant_mfbds=1  || variant_mfbds=0
-	[ "$variant_mlpds"  = "immune" ] && variant_mlpds=1  || variant_mlpds=0
-	[ "$variant_mdsum"  = "immune" ] && variant_mdsum=1  || variant_mdsum=0
-	[ "$variant_taa"    = "immune" ] && variant_taa=1    || variant_taa=0
-	[ "$variant_itlbmh" = "immune" ] && variant_itlbmh=1 || variant_itlbmh=0
-	[ "$variant_srbds" = "immune" ] && variant_srbds=1 || variant_srbds=0
+	[ "$variant1"         = "immune" ] && variant1=1       || variant1=0
+	[ "$variant2"         = "immune" ] && variant2=1       || variant2=0
+	[ "$variant3"         = "immune" ] && variant3=1       || variant3=0
+	[ "$variant3a"        = "immune" ] && variant3a=1      || variant3a=0
+	[ "$variant4"         = "immune" ] && variant4=1       || variant4=0
+	[ "$variantl1tf"      = "immune" ] && variantl1tf=1    || variantl1tf=0
+	[ "$variant_msbds"    = "immune" ] && variant_msbds=1  || variant_msbds=0
+	[ "$variant_mfbds"    = "immune" ] && variant_mfbds=1  || variant_mfbds=0
+	[ "$variant_mlpds"    = "immune" ] && variant_mlpds=1  || variant_mlpds=0
+	[ "$variant_mdsum"    = "immune" ] && variant_mdsum=1  || variant_mdsum=0
+	[ "$variant_taa"      = "immune" ] && variant_taa=1    || variant_taa=0
+	[ "$variant_itlbmh"   = "immune" ] && variant_itlbmh=1 || variant_itlbmh=0
+	[ "$variant_srbds"    = "immune" ] && variant_srbds=1 || variant_srbds=0
+	[ "$variant_zenbleed" = "immune" ] && variant_zenbleed=1 || variant_zenbleed=0
 	variantl1tf_sgx="$variantl1tf"
 	# even if we are affected to L1TF, if there's no SGX, we're not affected to the original foreshadow
 	[ "$cpuid_sgx" = 0 ] && variantl1tf_sgx=1
@@ -846,6 +901,52 @@ show_header()
 	_info
 }
 
+# Family-Model-Stepping to CPUID
+# prints CPUID in base-10 to stdout
+fms2cpuid()
+{
+	_family="$1"
+	_model="$2"
+	_stepping="$3"
+
+	if [ "$(( _family ))" -le 15 ]; then
+		_extfamily=0
+		_lowfamily=$(( _family ))
+	else
+		# when we have a family > 0xF, then lowfamily is stuck at 0xF
+		# and extfamily is ADDED to it (as in "+"), to ensure old software
+		# never sees a lowfamily < 0xF for newer families
+		_lowfamily=15
+		_extfamily=$(( (_family) - 15 ))
+	fi
+	_extmodel=$((  (_model  & 0xF0 ) >> 4 ))
+	_lowmodel=$((  (_model  & 0x0F ) >> 0 ))
+	echo $(( (_stepping & 0x0F) | (_lowmodel << 4) | (_lowfamily << 8) | (_extmodel << 16) | (_extfamily << 20) ))
+}
+
+download_file()
+{
+	_url="$1"
+	_file="$2"
+	if command -v wget >/dev/null 2>&1; then
+		wget -q "$_url" -O "$_file"; ret=$?
+	elif command -v curl >/dev/null 2>&1; then
+		curl -sL "$_url" -o "$_file"; ret=$?
+	elif command -v fetch >/dev/null 2>&1; then
+		fetch -q "$_url" -o "$_file"; ret=$?
+	else
+		echo ERROR "please install one of \`wget\`, \`curl\` of \`fetch\` programs"
+		unset _file _url
+		return 1
+	fi
+	unset _file _url
+	if [ "$ret" != 0 ]; then
+		echo ERROR "error $ret"
+		return $ret
+	fi
+	echo DONE
+}
+
 [ -z "$HOME" ] && HOME="$(getent passwd "$(whoami)" | cut -d: -f6)"
 mcedb_cache="$HOME/.mcedb"
 update_fwdb()
@@ -862,42 +963,14 @@ update_fwdb()
 	mcedb_tmp="$(mktemp -t smc-mcedb-XXXXXX)"
 	mcedb_url='https://github.com/platomav/MCExtractor/raw/master/MCE.db'
 	_info_nol "Fetching MCE.db from the MCExtractor project... "
-	if command -v wget >/dev/null 2>&1; then
-		wget -q "$mcedb_url" -O "$mcedb_tmp"; ret=$?
-	elif command -v curl >/dev/null 2>&1; then
-		curl -sL "$mcedb_url" -o "$mcedb_tmp"; ret=$?
-	elif command -v fetch >/dev/null 2>&1; then
-		fetch -q "$mcedb_url" -o "$mcedb_tmp"; ret=$?
-	else
-		echo ERROR "please install one of \`wget\`, \`curl\` of \`fetch\` programs"
-		return 1
-	fi
-	if [ "$ret" != 0 ]; then
-		echo ERROR "error $ret while downloading MCE.db"
-		return $ret
-	fi
-	echo DONE
+	download_file "$mcedb_url" "$mcedb_tmp" || return $?
 
 	# second, get the Intel firmwares from GitHub
 	intel_tmp="$(mktemp -d -t smc-intelfw-XXXXXX)"
 	intel_url="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/main.zip"
 	_info_nol "Fetching Intel firmwares... "
 	## https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files.git
-	if command -v wget >/dev/null 2>&1; then
-		wget -q "$intel_url" -O "$intel_tmp/fw.zip"; ret=$?
-	elif command -v curl >/dev/null 2>&1; then
-		curl -sL "$intel_url" -o "$intel_tmp/fw.zip"; ret=$?
-	elif command -v fetch >/dev/null 2>&1; then
-		fetch -q "$intel_url" -o "$intel_tmp/fw.zip"; ret=$?
-	else
-		echo ERROR "please install one of \`wget\`, \`curl\` of \`fetch\` programs"
-		return 1
-	fi
-	if [ "$ret" != 0 ]; then
-		echo ERROR "error $ret while downloading Intel firmwares"
-		return $ret
-	fi
-	echo DONE
+	download_file "$intel_url" "$intel_tmp/fw.zip" || return $?
 
 	# now extract MCEdb contents using sqlite
 	_info_nol "Extracting MCEdb data... "
@@ -911,7 +984,9 @@ update_fwdb()
 		return 1
 	fi
 	sqlite3 "$mcedb_tmp" "ALTER TABLE \"Intel\" ADD COLUMN \"origin\" TEXT"
+	sqlite3 "$mcedb_tmp" "ALTER TABLE \"AMD\" ADD COLUMN \"origin\" TEXT"
 	sqlite3 "$mcedb_tmp" "UPDATE \"Intel\" SET \"origin\"='mce'"
+	sqlite3 "$mcedb_tmp" "UPDATE \"AMD\" SET \"origin\"='mce'"
 
 	echo OK "MCExtractor database revision $mcedb_revision"
 
@@ -962,7 +1037,39 @@ update_fwdb()
 	fi
 	echo DONE "(version $_intel_latest_date)"
 
+	# now parse the most recent linux-firmware amd-ucode README file
+	_info_nol "Fetching latest amd-ucode README from linux-firmware project... "
+	linuxfw_url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/amd-ucode/README"
+	linuxfw_tmp=$(mktemp -t smc-linuxfw-XXXXXX)
+	download_file "$linuxfw_url" "$linuxfw_tmp" || return $?
+
+	_info_nol "Parsing the README... "
+	nbfound=0
+	for line in $(grep -E 'Family=0x[0-9a-f]+ Model=0x[0-9a-f]+ Stepping=0x[0-9a-f]+: Patch=0x[0-9a-f]+' "$linuxfw_tmp" | tr " " ","); do
+		_debug "Parsing line $line"
+		_family=$(  echo "$line" | grep -Eoi 'Family=0x[0-9a-f]+'   | cut -d= -f2)
+		_model=$(   echo "$line" | grep -Eoi 'Model=0x[0-9a-f]+'    | cut -d= -f2)
+		_stepping=$(echo "$line" | grep -Eoi 'Stepping=0x[0-9a-f]+' | cut -d= -f2)
+		_version=$( echo "$line" | grep -Eoi 'Patch=0x[0-9a-f]+'    | cut -d= -f2)
+		_version=$(printf "0x%08X" "$(( _version ))")
+		_cpuid=$(fms2cpuid "$_family" "$_model" "$_stepping")
+		_cpuid=$(printf "0x%08X" "$_cpuid")
+		_date="20000101"
+		_sqlstm="$(printf "INSERT INTO \"AMD\" (\"origin\",\"cpuid\",\"version\",\"yyyymmdd\") VALUES ('%s','%s','%s','%s');" "linux-firmware" "$(printf "%08X" "$_cpuid")" "$(printf "%08X" "$_version")" "$_date")"
+		_debug "family $_family model $_model stepping $_stepping cpuid $_cpuid"
+		_debug "$_sqlstm"
+		sqlite3 "$mcedb_tmp" "$_sqlstm"
+		nbfound=$((nbfound + 1))
+		unset _family _model _stepping _version _cpuid _date _sqlstm
+	done
+	echo "found $nbfound microcodes"
+	unset nbfound
+
 	dbversion="$mcedb_revision+i$_intel_latest_date"
+	linuxfw_hash=$(md5sum "$linuxfw_tmp" 2>/dev/null | cut -c1-4)
+	if [ -n "$linuxfw_hash" ]; then
+		dbversion="$dbversion+$linuxfw_hash"
+	fi
 
 	if [ "$1" != builtin ] && [ -n "$previous_dbversion" ] && [ "$previous_dbversion" = "v$dbversion" ]; then
 		echo "We already have this version locally, no update needed"
@@ -1064,6 +1171,9 @@ while [ -n "${1:-}" ]; do
 	elif [ "$1" = "--allow-msr-write" ]; then
 		opt_allow_msr_write=1
 		shift
+	elif [ "$1" = "--no-intel-db" ]; then
+		opt_intel_db=0
+		shift
 	elif [ "$1" = "--cpu" ]; then
 		opt_cpu=$2
 		if [ "$opt_cpu" != all ]; then
@@ -1138,25 +1248,29 @@ while [ -n "${1:-}" ]; do
 		shift 2
 	elif [ "$1" = "--variant" ]; then
 		if [ -z "$2" ]; then
-			echo "$0: error: option --variant expects a parameter (1, 2, 3, 3a, 4 or l1tf)" >&2
+			echo "$0: error: option --variant expects a parameter (see --variant help)" >&2
 			exit 255
 		fi
 		case "$2" in
-			1)		opt_cve_list="$opt_cve_list CVE-2017-5753"; opt_cve_all=0;;
-			2)		opt_cve_list="$opt_cve_list CVE-2017-5715"; opt_cve_all=0;;
-			3)		opt_cve_list="$opt_cve_list CVE-2017-5754"; opt_cve_all=0;;
-			3a)		opt_cve_list="$opt_cve_list CVE-2018-3640"; opt_cve_all=0;;
-			4)		opt_cve_list="$opt_cve_list CVE-2018-3639"; opt_cve_all=0;;
-			msbds)  opt_cve_list="$opt_cve_list CVE-2018-12126"; opt_cve_all=0;;
-			mfbds)  opt_cve_list="$opt_cve_list CVE-2018-12130"; opt_cve_all=0;;
-			mlpds)  opt_cve_list="$opt_cve_list CVE-2018-12127"; opt_cve_all=0;;
-			mdsum)  opt_cve_list="$opt_cve_list CVE-2019-11091"; opt_cve_all=0;;
-			l1tf)	opt_cve_list="$opt_cve_list CVE-2018-3615 CVE-2018-3620 CVE-2018-3646"; opt_cve_all=0;;
-			taa)	opt_cve_list="$opt_cve_list CVE-2019-11135"; opt_cve_all=0;;
-			mcepsc)	opt_cve_list="$opt_cve_list CVE-2018-12207"; opt_cve_all=0;;
-			srbds)  opt_cve_list="$opt_cve_list CVE-2020-0543"; opt_cve_all=0;;
+			help)	echo "The following parameters are supported for --variant (can be used multiple times):";
+					echo "1, 2, 3, 3a, 4, msbds, mfbds, mlpds, mdsum, l1tf, taa, mcepsc, srbds, zenbleed";
+					exit 0;;
+			1)			opt_cve_list="$opt_cve_list CVE-2017-5753"; opt_cve_all=0;;
+			2)			opt_cve_list="$opt_cve_list CVE-2017-5715"; opt_cve_all=0;;
+			3)			opt_cve_list="$opt_cve_list CVE-2017-5754"; opt_cve_all=0;;
+			3a)			opt_cve_list="$opt_cve_list CVE-2018-3640"; opt_cve_all=0;;
+			4)			opt_cve_list="$opt_cve_list CVE-2018-3639"; opt_cve_all=0;;
+			msbds)		opt_cve_list="$opt_cve_list CVE-2018-12126"; opt_cve_all=0;;
+			mfbds)		opt_cve_list="$opt_cve_list CVE-2018-12130"; opt_cve_all=0;;
+			mlpds)		opt_cve_list="$opt_cve_list CVE-2018-12127"; opt_cve_all=0;;
+			mdsum)		opt_cve_list="$opt_cve_list CVE-2019-11091"; opt_cve_all=0;;
+			l1tf)		opt_cve_list="$opt_cve_list CVE-2018-3615 CVE-2018-3620 CVE-2018-3646"; opt_cve_all=0;;
+			taa)		opt_cve_list="$opt_cve_list CVE-2019-11135"; opt_cve_all=0;;
+			mcepsc)		opt_cve_list="$opt_cve_list CVE-2018-12207"; opt_cve_all=0;;
+			srbds)		opt_cve_list="$opt_cve_list CVE-2020-0543"; opt_cve_all=0;;
+			zenbleed)	opt_cve_list="$opt_cve_list CVE-2023-20593"; opt_cve_all=0;;
 			*)
-				echo "$0: error: invalid parameter '$2' for --variant, expected either 1, 2, 3, 3a, 4, l1tf, msbds, mfbds, mlpds, mdsum, taa, mcepsc or srbds" >&2;
+				echo "$0: error: invalid parameter '$2' for --variant, see --variant help for a list" >&2;
 				exit 255
 				;;
 		esac
@@ -1247,6 +1361,7 @@ pvulnstatus()
 			CVE-2019-11135) aka="TAA";;
 			CVE-2018-12207) aka="ITLBMH";;
 			CVE-2020-0543) aka="SRBDS";;
+			CVE-2023-20593) aka="ZENBLEED";;
 			*) echo "$0: error: invalid CVE '$1' passed to pvulnstatus()" >&2; exit 255;;
 		esac
 
@@ -1751,7 +1866,9 @@ parse_cpu_details()
 	if read_cpuid 0x1 0x0 $EAX 0 0xFFFFFFFF; then
 		cpu_cpuid="$read_cpuid_value"
 	else
-		cpu_cpuid=0
+		# try to build it by ourselves
+		_debug "parse_cpu_details: build the CPUID by ourselves"
+		cpu_cpuid=$(fms2cpuid "$cpu_family" "$cpu_model" "$cpu_stepping")
 	fi
 
 	# under BSD, linprocfs often doesn't export ucode information, so fetch it ourselves the good old way
@@ -1859,18 +1976,21 @@ parse_cpu_details()
 }
 is_hygon()
 {
+	parse_cpu_details
 	[ "$cpu_vendor" = HygonGenuine ] && return 0
 	return 1
 }
 
 is_amd()
 {
+	parse_cpu_details
 	[ "$cpu_vendor" = AuthenticAMD ] && return 0
 	return 1
 }
 
 is_intel()
 {
+	parse_cpu_details
 	[ "$cpu_vendor" = GenuineIntel ] && return 0
 	return 1
 }
@@ -1987,12 +2107,75 @@ is_zen_cpu()
 	[ "$cpu_family" = 23 ] && return 0
 	return 1
 }
+
 is_moksha_cpu()
 {
 	parse_cpu_details
 	is_hygon || return 1
 	[ "$cpu_family" = 24 ] && return 0
 	return 1
+}
+
+# mimick the Linux macro
+##define AMD_MODEL_RANGE(f, m_start, s_start, m_end, s_end) \
+#	((f << 24) | (m_start << 16) | (s_start << 12) | (m_end << 4) | (s_end))
+amd_model_range()
+{
+	echo $(( ($1 << 24) | ($2 << 16) | ($3 << 12) | ($4 << 4) | ($5) ))
+}
+
+# mimick the Linux func, usage:
+# amd_legacy_erratum $(amd_model_range 0x17 0x30 0x0 0x4f 0xf)
+# return true (0) if the current CPU is affected by this erratum, 1 otherwise
+amd_legacy_erratum()
+{
+	_range="$1"
+	_ms=$((cpu_model << 4 | cpu_stepping))
+	if [ "$cpu_family" = $(( ( (_range) >> 24) & 0xff )) ] && \
+		[ $_ms -ge $(( ( (_range) >> 12) & 0xfff )) ] && \
+		[ $_ms -le $(( (_range) & 0xfff )) ]; then
+		return 0
+	fi
+	return 1
+}
+
+# returns 0 (true) if yes, 1 otherwise
+# returns 2 if not applicable
+has_zenbleed_fixed_firmware()
+{
+	# return cached data
+	[ -n "$zenbleed_fw" ] && return "$zenbleed_fw"
+	# or compute it:
+	zenbleed_fw=2 # unknown
+	# only amd
+	if ! is_amd; then
+		zenbleed_fw=1
+		return $zenbleed_fw
+	fi
+	# list of known fixed firmwares, from commit 522b1d69219d8f083173819fde04f994aa051a98
+	_tuples="
+		0x30,0x3f,0x0830107a
+		0x60,0x67,0x0860010b
+		0x68,0x6f,0x08608105
+		0x70,0x7f,0x08701032
+		0xa0,0xaf,0x08a00008
+	"
+	for tuple in $_tuples; do
+		_model_low=$( echo "$tuple" | cut -d, -f1)
+		_model_high=$(echo "$tuple" | cut -d, -f2)
+		_fwver=$(     echo "$tuple" | cut -d, -f3)
+		if [ $((cpu_model)) -ge $((_model_low)) ] && [ $((cpu_model)) -le $((_model_high)) ]; then
+			if [ $((cpu_ucode)) -ge $((_fwver)) ]; then
+				zenbleed_fw=0 # true
+				break
+			else
+				zenbleed_fw=1 # false
+				zenbleed_fw_required=$_fwver
+			fi
+		fi
+	done
+	unset _tuples
+	return $zenbleed_fw
 }
 
 # Test if the current host is a Xen PV Dom0 / DomU
@@ -2064,6 +2247,14 @@ fi
 read_mcedb()
 {
 	awk '{ if (DELIM==1) { print $2 } } /^# %%% MCEDB / { DELIM=1 }' "$mcedb_source"
+}
+
+read_inteldb()
+{
+	if [ "$opt_intel_db" = 1 ]; then
+		awk '/^# %%% ENDOFINTELDB/ { exit } { if (DELIM==1) { print $2 } } /^# %%% INTELDB/ { DELIM=1 }' "$0"
+	fi
+	# otherwise don't output nothing, it'll be as if the database is empty
 }
 
 is_latest_known_ucode()
@@ -3294,6 +3485,21 @@ check_cpu()
 	else
 		pstatus yellow UNKNOWN "$read_cpuid_msg"
 		cpuid_srbds=0
+	fi
+
+	if is_amd; then
+		_info_nol "  * CPU microcode is known to fix Zenbleed: "
+		has_zenbleed_fixed_firmware; ret=$?
+		if [ $ret -eq 0 ]; then
+			# affected CPU, new fw
+			pstatus green YES
+		elif [ $ret -eq 1 ]; then
+			# affected CPU, old fw
+			pstatus red NO "required version: $zenbleed_fw_required"
+		else
+			# unaffected CPU
+			pstatus yellow NO
+		fi
 	fi
 
 	_info_nol "  * CPU microcode is known to cause stability problems: "
@@ -5758,6 +5964,132 @@ check_CVE_2020_0543_bsd()
 	fi
 }
 
+####################
+# Zenbleed section
+
+check_CVE_2023_20593()
+{
+	cve='CVE-2023-20593'
+	_info "\033[1;34m$cve aka '$(cve2name "$cve")'\033[0m"
+	if [ "$os" = Linux ]; then
+		check_CVE_2023_20593_linux
+	#elif echo "$os" | grep -q BSD; then
+	#	check_CVE_2023_20593_bsd
+	else
+		_warn "Unsupported OS ($os)"
+	fi
+}
+
+check_CVE_2023_20593_linux()
+{
+	status=UNK
+	sys_interface_available=0
+	msg=''
+	if [ "$opt_sysfs_only" != 1 ]; then
+		_info_nol "* Zenbleed mitigation is supported by kernel: "
+		kernel_zenbleed=''
+		if [ -n "$kernel_err" ]; then
+			kernel_zenbleed_err="$kernel_err"
+		# commit 522b1d69219d8f083173819fde04f994aa051a98
+		elif grep -q 'Zenbleed:' "$kernel"; then
+			kernel_zenbleed="found zenbleed message in kernel image"
+		fi
+		if [ -n "$kernel_zenbleed" ]; then
+			pstatus green YES "$kernel_zenbleed"
+		elif [ -n "$kernel_zenbleed_err" ]; then
+			pstatus yellow UNKNOWN "$kernel_zenbleed_err"
+		else
+			pstatus yellow NO
+		fi
+		_info_nol "* Zenbleed kernel mitigation enabled and active: "
+		if [ "$opt_live" = 1 ]; then
+			# read the DE_CFG MSR, we want to check the 9th bit
+			# don't do it on non-Zen2 AMD CPUs or later, aka Family 17h,
+			# as the behavior could be unknown on others
+			if is_amd && [ "$cpu_family" -ge $((0x17)) ]; then
+				read_msr 0xc0011029; ret=$?
+				if [ $ret = $READ_MSR_RET_OK ]; then
+					if [ $(( read_msr_value >> 9 & 1 )) -eq 1 ]; then
+						pstatus green YES "FP_BACKUP_FIX bit set in DE_CFG"
+						fp_backup_fix=1
+					else
+						pstatus yellow NO "FP_BACKUP_FIX is cleared in DE_CFG"
+						fp_backup_fix=0
+					fi
+				elif [ $ret = $READ_MSR_RET_KO ]; then
+					pstatus yellow UNKNOWN "Couldn't read the DE_CFG MSR"
+				else
+					pstatus yellow UNKNOWN "$read_msr_msg"
+				fi
+			else
+				fp_backup_fix=0
+				pstatus blue N/A "CPU is incompatible"
+			fi
+		else
+			pstatus blue N/A "not testable in offline mode"
+		fi
+
+		_info_nol "* Zenbleed mitigation is supported by CPU microcode: "
+		has_zenbleed_fixed_firmware; ret=$?
+		if [ $ret -eq 0 ]; then
+			pstatus green YES
+			cpu_ucode_zenbleed=1
+		elif [ $ret -eq 1 ]; then
+			pstatus yellow NO
+			cpu_ucode_zenbleed=2
+		else
+			pstatus yellow UNKNOWN
+			cpu_ucode_zenbleed=3
+		fi
+
+	elif [ "$sys_interface_available" = 0 ]; then
+		# we have no sysfs but were asked to use it only!
+		msg="/sys vulnerability interface use forced, but it's not available!"
+		status=UNK
+	fi
+
+	if ! is_cpu_affected "$cve" ; then
+		# override status & msg in case CPU is not vulnerable after all
+		pvulnstatus "$cve" OK "your CPU vendor reported your CPU model as not affected"
+	elif [ -z "$msg" ]; then
+		# if msg is empty, sysfs check didn't fill it, rely on our own test
+		zenbleed_print_vuln=0
+		if [ "$opt_live" = 1 ]; then
+			if [ "$fp_backup_fix" = 1 ] && [ "$cpu_ucode_zenbleed" = 1 ]; then
+				# this should never happen, but if it does, it's interesting to know
+				pvulnstatus $cve OK "Both your CPU microcode and kernel are mitigating Zenbleed"
+			elif [ "$cpu_ucode_zenbleed" = 1 ]; then
+				pvulnstatus $cve OK "Your CPU microcode mitigates Zenbleed"
+			elif [ "$fp_backup_fix" = 1 ]; then
+				pvulnstatus $cve OK "Your kernel mitigates Zenbleed"
+			else
+				zenbleed_print_vuln=1
+			fi
+		else
+			if [ "$cpu_ucode_zenbleed" = 1 ]; then
+				pvulnstatus $cve OK "Your CPU microcode mitigates Zenbleed"
+			elif [ -n "$kernel_zenbleed" ]; then
+				pvulnstatus $cve OK "Your kernel mitigates Zenbleed"
+			else
+				zenbleed_print_vuln=1
+			fi
+		fi
+		if [ "$zenbleed_print_vuln" = 1 ]; then
+			pvulnstatus $cve VULN "Your kernel is too old to mitigate Zenbleed and your CPU microcode doesn't mitigate it either"
+			explain "Your CPU vendor may have a new microcode for your CPU model that mitigates this issue (refer to the hardware section above).\n " \
+"Otherwise, the Linux kernel is able to mitigate this issue regardless of the microcode version you have, but in this case\n " \
+"your kernel is too old to support this, your Linux distribution vendor might have a more recent version you should upgrade to.\n " \
+"Note that either having an up to date microcode OR an up to date kernel is enough to mitigate this issue.\n " \
+"To manually mitigate the issue right now, you may use the following command: \`wrmsr -a 0xc0011029 \$((\$(rdmsr -c 0xc0011029) | (1<<9)))\`,\n " \
+"however note that this manual mitigation will only be active until the next reboot."
+		fi
+		unset zenbleed_print_vuln
+	else
+		pvulnstatus $cve "$status" "$msg"
+	fi
+}
+
+
 #######################
 # END OF VULNS SECTIONS
 
@@ -5846,11 +6178,134 @@ fi
 [ "$global_unknown"  = 1 ] && exit 3  # unknown
 exit 0  # ok
 
-# We're using MCE.db from the excellent platomav's MCExtractor project
-# The builtin version follows, but the user can download an up-to-date copy (to be stored in his $HOME) by using --update-fwdb
-# To update the builtin version itself (by *modifying* this very file), use --update-builtin-fwdb
+# Dump from Intel affected CPU page:
+# - https://www.intel.com/content/www/us/en/developer/topic-technology/software-security-guidance/processors-affected-consolidated-product-cpu-model.html
+# Only currently-supported CPUs are listed, so only rely on it if the current CPU happens to be in the list.
+# We merge it with info from the following file:
+# - https://software.intel.com/content/dam/www/public/us/en/documents/affected-processors-transient-execution-attacks-by-cpu-aug02.xlsx
+# As it contains some information from older processors, however when information is contradictory between the two sources, the HTML takes precedence as
+# it is expected to be updated, whereas the xslx seems to be frozen.
+#
+# N: Not affected
+# S: Affected, software fix
+# H: Affected, hardware fix
+# M: Affected, MCU update needed
+# B: Affected, BIOS update needed
+# X: Affected, no planned mitigation
+# Y: Affected (this is from the xlsx, no details are available)
+#
+# %%% INTELDB
+# 0x000206A7,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=N,
+# 0x000206D6,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=N,
+# 0x000206D7,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=N,
+# 0x00030673,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00030678,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00030679,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000306A9,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=Y,
+# 0x000306C3,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=Y,
+# 0x000306D4,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=Y,2020-0543=Y,
+# 0x000306E4,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=N,
+# 0x000306E7,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=N,
+# 0x000306F2,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=N,2020-0543=N,
+# 0x000306F4,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x00040651,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=Y,
+# 0x00040661,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=N,2020-0543=Y,
+# 0x00040671,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=Y,2020-0543=Y,
+# 0x000406A0,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000406C3,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000406C4,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000406D8,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000406E3,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=MS,
+# 0x000406F1,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x00050653,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x00050654,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x00050656,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=MS,2020-0543=N,
+# 0x00050657,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=MS,2020-0543=N,
+# 0x0005065A,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x0005065B,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00050662,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=Y,2018-12130=Y,2018-12207=Y,2018-3615=Y,2018-3620=Y,2018-3639=Y,2018-3640=Y,2018-3646=Y,2019-11135=Y,2020-0543=N,
+# 0x00050663,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x00050664,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x00050665,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=N,
+# 0x000506A0,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000506C9,2017-5715=MS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000506CA,2017-5715=MS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000506D0,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000506E3,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=MS,
+# 0x000506F1,2017-5715=MS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00060650,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000606A0,2017-5715=Y,2017-5753=Y,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=Y,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000606A4,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000606A5,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000606A6,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000606C1,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000606E1,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x0007065A,2017-5715=Y,2017-5753=Y,2017-5754=Y,2018-12126=Y,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=N,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000706A1,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000706A8,2017-5715=MS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000706E5,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=HM,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00080660,2017-5715=Y,2017-5753=Y,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=Y,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00080664,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00080665,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00080667,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806A0,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=HM,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806A1,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=HM,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806C0,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806C1,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806C2,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806D0,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806D1,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806E9,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=M,
+# 0x000806EA,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=MS,
+# 0x000806EB,2017-5715=MS,2017-5753=S,2017-5754=N,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=M,2018-3646=N,2019-11135=MS,2020-0543=MS,
+# 0x000806EC,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=MS,2020-0543=MS,
+# 0x000806F7,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000806F8,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090660,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090661,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090670,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090671,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090672,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090673,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090674,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x00090675,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000906A0,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000906A2,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000906A3,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000906A4,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=MS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000906C0,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000906E9,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=MS,
+# 0x000906EA,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=MS,
+# 0x000906EB,2017-5715=MS,2017-5753=S,2017-5754=S,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=MS,2018-3620=MS,2018-3639=MS,2018-3640=M,2018-3646=MS,2019-11135=MS,2020-0543=MS,
+# 0x000906EC,2017-5715=MS,2017-5753=S,2017-5754=N,2018-12126=MS,2018-12127=MS,2018-12130=MS,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=MS,2020-0543=MS,
+# 0x000906ED,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=MS,2020-0543=MS,
+# 0x000A0650,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0651,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0652,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0653,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0655,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0660,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0661,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=S,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=M,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0670,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0671,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000A0680,2017-5715=Y,2017-5753=Y,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=Y,2018-3615=N,2018-3620=N,2018-3639=Y,2018-3640=Y,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000B0671,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000B06A2,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000B06A3,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000B06F2,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# 0x000B06F5,2017-5715=HS,2017-5753=S,2017-5754=N,2018-12126=N,2018-12127=N,2018-12130=N,2018-12207=N,2018-3615=N,2018-3620=N,2018-3639=HS,2018-3640=N,2018-3646=N,2019-11135=N,2020-0543=N,
+# %%% ENDOFINTELDB
 
-# %%% MCEDB v266+i20230512
+# We're using MCE.db from the excellent platomav's MCExtractor project
+# The builtin version follows, but the user can download an up-to-date copy (to be stored in their $HOME) by using --update-fwdb
+# To update the builtin version itself (by *modifying* this very file), use --update-builtin-fwdb
+#
+# The format below is:
+# X,CPUID_HEX,MICROCODE_VERSION_HEX,YYYYMMDD
+# with X being either I for Intel, or A for AMD
+# When the date is unknown it defaults to 20000101
+
+# %%% MCEDB v271+i20230614+b6bd
 # I,0x00000611,0x00000B27,19961218
 # I,0x00000612,0x000000C6,19961210
 # I,0x00000616,0x000000C6,19961210
@@ -6188,7 +6643,8 @@ exit 0  # ok
 # I,0x000B06E0,0x00000010,20221219
 # I,0x000B06F2,0x0000002C,20230104
 # I,0x000B06F5,0x0000002C,20230104
-# I,0x000C06F1,0x20000270,20230221
+# I,0x000C06F1,0x21000030,20230410
+# I,0x000C06F2,0x21000030,20230410
 # A,0x00000F00,0x02000008,20070614
 # A,0x00000F01,0x0000001C,20021031
 # A,0x00000F10,0x00000003,20020325
@@ -6212,13 +6668,17 @@ exit 0  # ok
 # A,0x00100F00,0x01000020,20070326
 # A,0x00100F20,0x010000CA,20100331
 # A,0x00100F22,0x010000C9,20100331
+# A,0x00100F2A,0x01000084,20000101
 # A,0x00100F40,0x01000085,20080501
 # A,0x00100F41,0x010000DB,20111024
 # A,0x00100F42,0x01000092,20081021
 # A,0x00100F43,0x010000C8,20100311
+# A,0x00100F52,0x010000DB,20000101
+# A,0x00100F53,0x010000C8,20000101
 # A,0x00100F62,0x010000C7,20100311
 # A,0x00100F80,0x010000DA,20111024
 # A,0x00100F81,0x010000D9,20111012
+# A,0x00100F91,0x010000D9,20000101
 # A,0x00100FA0,0x010000DC,20111024
 # A,0x00120F00,0x03000002,20100324
 # A,0x00200F30,0x02000018,20070921
@@ -6268,26 +6728,26 @@ exit 0  # ok
 # A,0x00820F00,0x08200002,20180214
 # A,0x00820F01,0x08200103,20190417
 # A,0x00830F00,0x08300027,20190401
-# A,0x00830F10,0x08301072,20220215
+# A,0x00830F10,0x0830107A,20230517
 # A,0x00850F00,0x08500004,20180212
 # A,0x00860F00,0x0860000E,20200127
 # A,0x00860F01,0x08600109,20220328
 # A,0x00860F81,0x08608104,20220328
 # A,0x00870F00,0x08700004,20181206
 # A,0x00870F10,0x08701030,20220328
-# A,0x008A0F00,0x08A00006,20220322
+# A,0x008A0F00,0x08A00008,20230615
 # A,0x00A00F00,0x0A000033,20200413
-# A,0x00A00F10,0x0A001078,20230117
-# A,0x00A00F11,0x0A0011CE,20230114
-# A,0x00A00F12,0x0A001231,20230117
+# A,0x00A00F10,0x0A001079,20230609
+# A,0x00A00F11,0x0A0011D1,20230710
+# A,0x00A00F12,0x0A001234,20230710
 # A,0x00A00F80,0x0A008003,20211015
 # A,0x00A00F82,0x0A008205,20220414
 # A,0x00A10F00,0x0A10004B,20220309
 # A,0x00A10F01,0x0A100104,20220207
 # A,0x00A10F0B,0x0A100B07,20220610
 # A,0x00A10F10,0x0A101020,20220913
-# A,0x00A10F11,0x0A101116,20230127
-# A,0x00A10F12,0x0A101203,20230125
+# A,0x00A10F11,0x0A101135,20230509
+# A,0x00A10F12,0x0A101235,20230509
 # A,0x00A20F00,0x0A200025,20200121
 # A,0x00A20F10,0x0A201025,20211014
 # A,0x00A20F12,0x0A20120A,20211014
@@ -6299,5 +6759,5 @@ exit 0  # ok
 # A,0x00A60F11,0x0A601114,20220712
 # A,0x00A60F12,0x0A601203,20220715
 # A,0x00AA0F00,0x0AA00009,20221006
-# A,0x00AA0F01,0x0AA00107,20230127
-# A,0x00AA0F02,0x0AA00205,20230202
+# A,0x00AA0F01,0x0AA00112,20230510
+# A,0x00AA0F02,0x0AA0020E,20230510

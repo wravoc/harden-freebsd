@@ -2,3 +2,5 @@
 .DS_Store
 settings_test.ini
 TODO
+zenbleed-check.sh
+zenbleed_workaround.sh
