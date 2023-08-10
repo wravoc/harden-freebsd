@@ -60,10 +60,10 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ### Features
 * Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
-* Patches to the latest AMD microcode if available from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD)
+* Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD)
 * If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
-* The chicken-bit must be set every boot so an rc script is provided to set this bit on every reboot.
-* To command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
+* The chicken-bit must be set every boot so an rc script is provided to set this bit on every boot.
+* The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
 
 ### Execute
 * `chmod 750 zenbleed-workaround.csh`
