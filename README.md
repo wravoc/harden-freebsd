@@ -35,7 +35,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * **Desktop Wallpapers as a special gift to users of the Software**
     * QHE Wallpapers meet the [FreeBSD Foundation Trademark Usage Terms and Conditions](https://freebsdfoundation.org/legal/trademark-usage-terms-and-conditions/) where most FreeBSD digital art does not.
     * An original digital art creation containing the FreeBSD Logo under T&C, the larger work is thus automatically copyrighted worldwide and may not be distributed, shared, or altered. 
-    * FreeBSD Foundation Members, Employees, and Associates are exempt from any restrictions
+    * FreeBSD Foundation Members, Employees, and Associates are exempt from Digital Art restrictions
 
 
 *Full [Changelog](Changelog.md)*
