@@ -9,10 +9,32 @@ This script is also targeted to new users of FreeBSD so that they may leverage y
 Each of the security settings was researched, assessed, and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability.
 
 
-## New Features in 2.0.2
-* Now sets `/boot/loader.conf` in order to load kernel security features early in initialization
-* New security settings
-* Additional software included to verify the implementation
+## FreeBSD Security Advisories
+### Remote denial of service in IPv6 fragment reassembly
+* `net.inet6.ip6.maxfrags = 0` [(*)](https://www.freebsd.org/security/advisories/FreeBSD-SA-23:06.ipv6.asc)
+    * **Official FreeBSD Security Advisory Workaround** 
+    * If using pf to scrub framents you do **not** need this workaround
+    * Add the directive above to `[SYSTEM} settings.ini` if not using pf scrub, and until you can safely patch the system
+    ```
+    root@freebsd:~# freebsd-update fetch
+    root@freebsd:~# freebsd-update install
+    root@freebsd:~# shutdown -r +10min "Rebooting for a security update"
+    ```
+### Downfall Intel CPU Vulnerability
+* https://downfall.page/
+    * Computing devices based on Intel Core processors from the 6th Skylake to (including) the 11th Tiger Lake generation are affected.
+    * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
+    * **Mitigation**: Intel Microcode Update Expected 
+
+
+## New Features in 3.0.1
+* ZenBleed Workaround
+* CPU microcode updating enabled in anticipation of Zenbleed and Downfall Patches
+* **Desktop Wallpapers as a special gift to users of the Software**
+    * QHE Wallpapers meet the [FreeBSD Foundation Trademark Usage Terms and Conditions](https://freebsdfoundation.org/legal/trademark-usage-terms-and-conditions/) where most FreeBSD digital art does not.
+    * An original digital art creation containing the FreeBSD Logo under T&C, the larger work is thus automatically copyrighted worldwide and may not be distributed, shared, or altered. 
+    * FreeBSD Foundation Members, Employees, and Associates are exempt from any restrictions
+
 
 *Full [Changelog](Changelog.md)*
 
@@ -26,6 +48,33 @@ Each of the security settings was researched, assessed, and chosen as a set of m
         * `cc mmap_protect.c` 
         * `./a.out`
         * You should have two successes
+
+
+## Zenbleed Workaround
+* [Security Engineer's Discovery & Write-Up](https://lock.cmpxchg8b.com/zenbleed.html)
+* [Affects AMD Zen 2 Chipset Family](https://nakedsecurity.sophos.com/2023/07/26/zenbleed-how-the-quest-for-cpu-performance-could-put-your-passwords-at-risk/)
+* Mitigation/workaround suggested by discovering Security Engineer **will not work in Virtual Machines**
+* AMD has patched the Rome family, server oriented series, of CPU's but all others are expected in December of 2023.
+
+### Features
+* Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
+* Patches to the latest AMD microcode if available from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD)
+* If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
+* The chicken-bit must be set every boot so an rc script is provided to set this bit on every reboot.
+* To command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
+
+### Execute
+* `chmod 750 zenbleed-workaround.csh`
+* `sudo ./zenbleed-workaround.csh`
+
+### Arguments
+* `./zenbleed-workaround.csh clean` removes the CPU microcode/firmware utilities as a security measure once Zenbleed patching is complete
+    * Do not use `clean` if you still need the workaround on baremetal as it uses cpucontrol.
+* `./zenbleed-workaround.csh remove` removes the chicken-bit setting rc script on bare metal machines for performance reasons or once the patch is applied from AMD in Decemeber 2023. 
+    * In the case of an AMD Zenbleed fully patched CPU, follow `remove` with `clean` for security purposes.
+
+
+
 
 
 ## Features
