@@ -2,5 +2,9 @@
 .DS_Store
 settings_test.ini
 TODO
+config
+description
+cloneurl
 zenbleed-check.sh
 zenbleed_workaround.sh
+zenbleed-workaround-csh.sh
