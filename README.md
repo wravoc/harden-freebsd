@@ -8,6 +8,7 @@ This script is also targeted to new users of FreeBSD so that they may leverage y
 
 Each of the security settings was researched, assessed, and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability.
 
+---
 
 ## FreeBSD Security Advisories
 ### Remote denial of service in IPv6 fragment reassembly
@@ -26,6 +27,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
     * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
     * **Mitigation**: Intel Microcode Update Expected 
 
+---
 
 ## New Features in 3.0.1
 * ZenBleed Workaround
