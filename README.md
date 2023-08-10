@@ -76,8 +76,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
     * In the case of an AMD Zenbleed fully patched CPU, follow `remove` with `clean` for security purposes.
 
 
-
-
+---
 
 ## Features
 
@@ -171,6 +170,9 @@ The newly applied settings will not take affect until you reset your password.
 6. Put it in your template
 
 
+---
+
+
 ## Setting Descriptors
 **Startup**
 * `kern_securelevel_enable = "YES"`
@@ -246,6 +248,9 @@ The newly applied settings will not take affect until you reset your password.
     * Enable ASLR for Position-Independent Executables (PIE) binaries
 * `cpu_microcode_load = "NO"`
     * Disallow automatic CPU Microcode updates
+
+
+---
 
 
 ## License Summary
