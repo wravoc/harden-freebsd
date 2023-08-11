@@ -193,7 +193,7 @@ if ( $amd_sysctl_check == "AMD" && $amd_model == "EPYC-Rome" ) then
             printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
             printf "\033[1mSecurity Notice:\033[0m\n"
             printf "After update you should remove update utilities\n"
-            printf "Please reboot and run sudo zenbleed_workaround.csh clean\n"
+            printf "Reboot, sudo zenbleed_workaround.csh clean, reboot\n"
             printf "*******************************************************\n\n"
             exit 1
             breaksw
