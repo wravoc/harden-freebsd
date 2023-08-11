@@ -312,7 +312,7 @@ remove:
     service zenbleed-rc.sh onestop
     service zenbleed-rc.sh onedisable
     sed -i .zen_backup '/^cpuctl_load/d' /boot/loader.conf
-    sed -i .zen_backup '/^Zenbleed_enable/d' /etc/rc.conf
+    sed -i .zen_backup '/^zenbleed_enable/d' /etc/rc.conf
     rm /usr/local/etc/rc.d/zenbleed-rc.sh
     set cpuctl_isloaded = cpuctl_load=\"YES\"
         if ( $check_cpucontrol == "") then

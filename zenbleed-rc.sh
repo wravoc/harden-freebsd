@@ -10,7 +10,7 @@
 
 . /etc/rc.subr
 
-name="Zenbleed"
+name="zenbleed"
 desc="Zenbleed Workaround"
 rcvar="${name}_enable"
 start_cmd="msr_set"
@@ -18,7 +18,7 @@ start_cmd="msr_set"
 
 load_rc_config "${name}"
 
-: "${Zenbleed_enable:=NO}"
+: "${zenbleed_enable:=NO}"
 
 
 msr_set() {
