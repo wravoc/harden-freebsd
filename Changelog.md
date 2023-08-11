@@ -6,6 +6,10 @@
         * Simply using the `remove` argument and rebooting will return the AMD Zenbleed vulnerability -> MSR state to default
 * Fixed Syntax errors and word clarity in the main workaround file
 * Added a prompted reminder function using `at` to create a file in the home directory reminding the user to use the official patch due at that time and remove the workaround
+* Changed the user text notice after a microcode update for better security and stability
+    1. Rebooting once should show clean startup with new microcode but still keep the tools in case of reversion
+    2. Use the `clean` function to remove the conf directives that load the still loaded promiscuous cpu tools
+    3. Rebooting again to load without promiscuous cpu tools
 
 ## August 8, 2023
 * `settings.ini`
