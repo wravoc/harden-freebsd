@@ -23,7 +23,7 @@ load_rc_config "${name}"
 
 msr_set() {
     cores=$(ls -l /dev | grep "cpuctl" | wc -l)
-    a=0; while [ $a -lt $cores ]; do cpucontrol -m '0xc0011029&=0x200' /dev/cpuctl$a; a=$((a + 1)); done
+    a=0; while [ $a -lt $cores ]; do cpucontrol -m '0xc0011029|=0x200' /dev/cpuctl$a; a=$((a + 1)); done
 }
 
 load_rc_config $name
