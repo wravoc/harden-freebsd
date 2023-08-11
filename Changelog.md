@@ -1,5 +1,5 @@
 ## Auguest 11, 2023
-* The rc script has been updated for even better performance. 
+* The rc script has been updated for better performance and stability 
     * There is no positive value cases I can find for removing the chicken-bit during operation which on the contrary may produce unexpected results as with other workarounds of this type
     * Rebooting without the rc script running returns the OS to an unset chicken-bit state which obviates the need to have a `rc` chicken-bit removal function. 
         * The user chooses the workaround or not without the rc script deciding every boot possibly introducing kernel crashes
