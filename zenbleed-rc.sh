@@ -18,7 +18,7 @@ start_cmd="msr_set"
 
 load_rc_config "${name}"
 
-: "${zenbleed_enable:=NO}"
+: "${Zenbleed_enable:=NO}"
 
 
 msr_set() {
