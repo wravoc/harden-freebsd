@@ -2,7 +2,7 @@
 
 ![](images/harden-freebsd-logo.jpg)
 
-FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?securelevel). This script will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning, and easier jail management. All existing entries in all confs will remain untouched unless they are modified in the settings file.
+FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?query=security&sektion=7&manpath=freebsd-release#SECURING_THE_KERNEL_CORE,_RAW_DEVICES,_AND_FILE%09SYSTEMS). This script will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning, and easier jail management. All existing entries in all confs will remain untouched unless they are modified in the settings file.
 
 This script is also targeted to new users of FreeBSD so that they may leverage years of security contributions by the entire BSD community across all spectra, implemented on thier system in seconds.
 
@@ -178,6 +178,8 @@ The newly applied settings will not take affect until you reset your password.
 **Startup**
 * `kern_securelevel_enable = "YES"`
     * Enable access to other than permanently insecure modes
+* `microcode_update_enable = "YES"`
+    * Allow CPU microcode/firmware updates
 * Disable Sendmail
 * `syslogd_flags="-ss"`
     * Disallow syslogd to bind to a network socket
@@ -247,8 +249,7 @@ The newly applied settings will not take affect until you reset your password.
     * 64bit is enabled by default in 13.2 so you can set this to 0 for 64bit processors or remove
 * `kern.elf32.aslr.pie_enable = "1"`
     * Enable ASLR for Position-Independent Executables (PIE) binaries
-* `cpu_microcode_load = "NO"`
-    * Disallow automatic CPU Microcode updates
+
 
 
 ---
