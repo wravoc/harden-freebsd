@@ -38,6 +38,16 @@ Each of the security settings was researched, assessed, and chosen as a set of m
     * FreeBSD Foundation Members, Employees, and Associates are exempt from Digital Art restrictions
 
 
+## August 11, 2023 Changelog
+* The rc script has been updated for better performance and stability 
+    * There is no positive value cases I can find for removing the chicken-bit during operation which on the contrary may produce unexpected results as with other workarounds of this type
+    * Rebooting without the rc script running returns the OS to an unset chicken-bit state which obviates the need to have a `rc` chicken-bit removal function. 
+        * The user chooses the workaround or not without the rc script deciding every boot possibly introducing kernel crashes
+        * Simply using the `remove` argument and rebooting will return the AMD Zenbleed vulnerability -> MSR state to default
+* Fixed Syntax errors and word clarity in the main workaround file
+* Added a prompted reminder function using `at` to create a file in the home directory reminding the user to use the official patch due at that time and remove the workaround
+
+
 *Full [Changelog](Changelog.md)*
 
 
@@ -62,9 +72,9 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ### Features
 * Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
-* Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD)
+* Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD) if available for your Zen2 CPU, currently, only "Rome" series as of August 11, 2023.
 * If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
-* The chicken-bit must be set every boot so an rc script is provided to set this bit on every boot. 
+* Only if a Zenbleed vulnerable CPU is detected a CPU chicken-bit is be set every boot via a provided rc script
 * Prompts to make a reminder to remove the script using `at` to create a file called `REMINDER-AMD-Zenbleed-Removal` in home directory on the 2023 December Solstice
 
 
