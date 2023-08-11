@@ -227,18 +227,56 @@ if ( $amd_sysctl_check == "AMD" && $amd_model == "EPYC-Rome" ) then
             printf "Exiting...\n"
             exit 1
     endsw
-else if ( $amd_sysctl_check == "AMD" && $zenbleeding )
+else if ( $amd_sysctl_check == "AMD" && $zenbleeding ) then
+    printf "********************\033[38;5;76m Zenbleed Found \033[0;0m********************\n"
     printf "Executing workaround\n"
-    echo zenbleed_enable=\"YES\" >> /etc/rc.conf
+    printf "*******************************************************\n\n"
     cp zenbleed-rc.sh /usr/local/etc/rc.d/
     chmod 755 /usr/local/etc/rc.d
     service zenbleed-rc.sh enable
     service zenbleed-rc.sh start
-        if ( -e /usr/local/etc/rc.d/zenbleed_workaround)
+    set workaround_status = `service -e | grep zenbleed_rc.sh`
+        if ( $workaround_status == /usr/local/etc/rc.d/zenbleed-rc.sh ) then
             printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
             printf "Workaround Active \033[1mUpon Reboot\033[0m"
             printf "*******************************************************\n\n"
+        else
+            printf "**********************\033[38;5;9m Failure \033[0;0m*************************\n"
+            printf "Workaround Activation \033[1mFailed\033[0m"
+            printf "Please activate manually\n"
+            printf "*******************************************************\n\n"
+            exit 1
         endif
+    printf "*********************\033[38;5;76m Reminder \033[0;0m*************************\n"
+    printf "Would you like to set a text file reminder to remove the workarond in December?\n"
+    printf "*******************************************************\n\n"
+    printf "\033[38;5;75m[yes/no]:\033[0m  "
+    set reminder_answer =  $<:l:l:l
+    switch ($reminder_answer)
+        case 'yes':
+            printf "at 1pm 12/21/2023<<ENDMARKER\n touch REMINDER-AMD-Zenbleed-Removal\nENDMARKER\n" > $HOME/zenbleed-at-reminder.sh
+            chmod 750 zenbleed-at-reminder.sh
+            source zenbleed-at-reminder.sh
+            printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
+            printf "at command set to create text file reminder 12/21/2023\n"
+            printf "*******************************************************\n\n"
+            exit 1
+            breaksw
+        case 'y':
+            printf "at 1pm 12/21/2023<<ENDMARKER\n touch REMINDER-AMD-Zenbleed-Removal\nENDMARKER\n" > $HOME/zenbleed-at-reminder.sh
+            chmod 750 zenbleed-at-reminder.sh
+            source zenbleed-at-reminder.sh
+            printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
+            printf "at command set to create text file reminder 12/21/2023\n"
+            printf "*******************************************************\n\n"
+            exit 1
+            breaksw
+        case 'n':
+            printf "Exiting...\n"
+            exit 1
+        case 'no':
+            printf "Exiting...\n"
+            exit
 else if !( $vm_check == "" && $amd_model == "Rome") then
     printf "\n**********************\033[38;5;75m VM Found \033[0;0m***********************\n" 
     printf "\033[1mVirtual Machine\033[0m: $vm_check\n"
@@ -274,7 +312,7 @@ remove:
     service zenbleed-rc.sh onestop
     service zenbleed-rc.sh onedisable
     sed -i .zen_backup '/^cpuctl_load/d' /boot/loader.conf
-    sed -i .zen_backup '/^zenbleed_workaround_enable/d' /etc/rc.conf
+    sed -i .zen_backup '/^Zenbleed_enable/d' /etc/rc.conf
     rm /usr/local/etc/rc.d/zenbleed-rc.sh
     set cpuctl_isloaded = cpuctl_load=\"YES\"
         if ( $check_cpucontrol == "") then

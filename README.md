@@ -58,13 +58,15 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * [Affects AMD Zen 2 Chipset Family](https://nakedsecurity.sophos.com/2023/07/26/zenbleed-how-the-quest-for-cpu-performance-could-put-your-passwords-at-risk/)
 * Mitigation/workaround suggested by discovering Security Engineer **will not work in Virtual Machines**
 * AMD has patched the Rome family, server oriented series, of CPU's but all others are expected in December of 2023.
+* The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
 
 ### Features
 * Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
 * Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD)
 * If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
-* The chicken-bit must be set every boot so an rc script is provided to set this bit on every boot.
-* The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
+* The chicken-bit must be set every boot so an rc script is provided to set this bit on every boot. 
+* Prompts to make a reminder to remove the script using `at` to create a file called `REMINDER-AMD-Zenbleed-Removal` in home directory on the 2023 December Solstice
+
 
 ### Execute
 * `chmod 750 zenbleed-workaround.csh`
@@ -73,7 +75,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ### Arguments
 * `./zenbleed-workaround.csh clean` removes the CPU microcode/firmware utilities as a security measure once Zenbleed patching is complete
     * Do not use `clean` if you still need the workaround on baremetal as it uses cpucontrol.
-* `./zenbleed-workaround.csh remove` removes the chicken-bit setting rc script on bare metal machines for performance reasons or once the patch is applied from AMD in Decemeber 2023. 
+* `./zenbleed-workaround.csh remove` removes the rc script for performance reasons or once the patch is applied from AMD in Decemeber 2023. 
     * In the case of an AMD Zenbleed fully patched CPU, follow `remove` with `clean` for security purposes.
 
 

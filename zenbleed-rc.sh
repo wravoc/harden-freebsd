@@ -5,34 +5,26 @@
 #
 # Workaround Origin: https://lock.cmpxchg8b.com/zenbleed.html
 
+# PROVIDE: Zenbleed
+# AFTER: kldxref
 
 . /etc/rc.subr
 
-name="zenbleed"
-desc="Zenbleed MSR chicken-bit Workaround"
+name="Zenbleed"
+desc="Zenbleed Workaround"
 rcvar="${name}_enable"
+start_cmd="msr_set"
 
-start_cmd="zenbleed_workaround"
-stop_cmd="zenbleed_restore"
 
 load_rc_config "${name}"
 
 : "${zenbleed_enable:=NO}"
 
-zenbleed_workaround() {
-    for core in /dev/cpuctl*
-    do
-        echo "Applying zenbleed_workaround for $core"
-        /usr/sbin/cpucontrol -m "0xc0011029|=0x200" "$core"
-    done
+
+msr_set() {
+    cores=$(ls -l /dev | grep "cpuctl" | wc -l)
+    a=0; while [ $a -lt $cores ]; do cpucontrol -m '0xc0011029&=0x200' /dev/cpuctl$a; a=$((a + 1)); done
 }
 
-zenbleed_restore() {
-    for core in /dev/cpuctl*
-    do
-        echo "Removing zenbleed_workaround for $core"
-        /usr/sbin/cpucontrol -m "0xc0011029&=~0x200" "$core"
-    done
-}
-
+load_rc_config $name
 run_rc_command "$1" 
