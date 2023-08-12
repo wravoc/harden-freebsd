@@ -42,7 +42,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * The rc script has been updated for better performance and stability 
     * There is no positive value cases I can find for removing the chicken-bit during operation which on the contrary may produce unexpected results as with other workarounds of this type
     * Rebooting without the rc script running returns the OS to an unset chicken-bit state which obviates the need to have a `rc` chicken-bit removal function. 
-        * The user chooses the workaround or not without the rc script deciding every boot possibly introducing kernel crashes
+        * The user chooses the workaround or not without the rc script making available CPU state changes while in operation possibly inducing kernel panics
         * Simply using the `remove` argument and rebooting will return the AMD Zenbleed vulnerability -> MSR state to default
 * Fixed Syntax errors and word clarity in the main workaround file
 * Added a prompted reminder function using `at` to create a file in the home directory reminding the user to use the official patch due at that time and remove the workaround
