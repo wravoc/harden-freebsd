@@ -284,6 +284,12 @@ else if !( $vm_check == "" && $amd_model == "Rome") then
     printf "*******************************************************\n\n"
     printf "Exiting...\n\n"
     exit 1
+else   
+    printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
+    printf "No Zenbleed affected CPU found\n"
+    printf "Exiting...\n"
+    printf "*******************************************************\n\n"
+    exit 1
 endif
 
 
