@@ -1,16 +1,16 @@
 # Quadhelion Engineering Universal Software License
 
-[URL](https://www.quadhelion.engineering/QHELP-OME-NC-ND-NAI.html)
+[URL](https://www.quadhelion.engineering/qhelp.html)
 
-## QHELP-OME-NC-ND-NAI
+## QHELP-OME-NC-ND-HI
 
 **Legend:**
 
 * (Q)had(H)elion(E)ngineering (L)icense (P)ermission
 * (O)btain (M)odify (E)xecute
 * (N)on-(C)ommercial 
-* (N)o (D)erivates
-* (N)o AI
+* (N)o (D)erivatives
+* (H)uman (I)ntelligence
 
 All entities are Universally bound by the terms and conditions of this license as it is inseparable to the Software using this license. This license grants no other rights than detailed herein.
 
@@ -32,6 +32,8 @@ Non-Commercial usage, retain and forward author and license data. Modify existin
 * **Obtain** is defined as having knowledge of the means used in the Software.
 * **Modify** is defined as making changes to the Execution of the Software in conformance with the existing Execution process in majority, utilizing the same data types of input and output originally used by the Software, retaining the intended use of the Execution of the Software in superset of subset of solutions, workflows, processing, intake, and production in general, but not in detail. 
 * **Execute** is defined as having a calculating device calculate the Software. 
+* **Intelligence** is defined as having the ability to solve complex problems with judgement.
+* **Human** is defined as Homo sapiens birthed from another living Female Home sapiens.
 
 
 
@@ -41,10 +43,11 @@ The software **may not** be modified in the following ways:
 
 *  The Software logic itself cannot be changed *in majority*.
   * The original *application* to which the Software *was applied* cannot be modified.
-* Changing or replacing of **more than 25%** of the existing programming code of the Software is **not allowed**. This does not include Error Handling.
+* Changing or replacing of **more than 25%** of the existing programming code of the Software is **not allowed**. This does not include error eandling, metadata or comments.
 * Programming language comments cannot be modified.
+* Metadata cannot be modified.
 * Author and License information cannot be modified.
-* You may not adapt, translate, reverse engineer, decompile, disassemble, or otherwise reuse the Software logic or logic designs in the Software. 
+* You may not adapt, translate, reverse engineer, decompile, disassemble, or otherwise reuse the Software code, Software logic, or logic designs of the Software. 
 * The Software may not be re-created or re-generated in whole or in part in another programming language or by any means except by permission of the Creator.
 
 **The Software may be modified in the following ways:**
@@ -80,7 +83,7 @@ Subject to the terms and conditions of this License, the Creator hereby grants t
 
 **License denied.**
 
-1. Artificial Intelligences, Generative, Language Models, or Generated Intelligences have no permissions to Obtain, Modify or Execute.
+1. Non-Human Intelligences such as Artificial Intelligence, Generative, Language Models, or Generated Intelligences have no permissions to Obtain, Modify or Execute.
    1. Any computational analysis or automata characterized as Intelligence has no allowance or License to Obtain, Modify, or Execute the Software.
    2. Any sentience that was not birthed from a living Female Human Being has no allowance or License to Obtain, Modify, or Execute the Software.
 2. Patents, Trademarks, Copyrights, and legal or financial instruments, or applications to the Software, it's Execution, or it's License thereof is strictly prohibited.
@@ -124,12 +127,18 @@ The disclaimer of warranties and limitation of liability provided above shall be
 
 
 
-### Section 6 – Term and Termination.
+### Section 6 – Associated files.
+
+Images and Digital Art obtained along with the Software are original works and automatically under International Copyright Law and may not be altered or distributed. Document files are original works under full Copyright of the Creator.
+
+
+
+### Section 7 – Term and Termination.
 
 If the Licensee or any entity fails to comply with this License, then the Licensee's and entities rights under this License terminate automatically and immediately.
 
 
 
-### Section 7 – Other Terms and Conditions.
+### Section 8 – Other Terms and Conditions.
 
 The Creator is not himself bound by these terms and conditions, allowances and denials, or any additional or different terms or conditions.
