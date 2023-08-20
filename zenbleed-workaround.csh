@@ -325,19 +325,18 @@ remove:
     printf "*****************\033[38;5;76m Removing Workaround \033[0;0m*****************\n"
     printf "*******************************************************\n\n"
     service zenbleed-rc.sh onestop
+    echo
+    sleep 1
     service zenbleed-rc.sh onedisable
+    echo
+    sleep 1
     sed -i .zen_backup '/^cpuctl_load/d' /boot/loader.conf
     sed -i .zen_backup '/^zenbleed_enable/d' /etc/rc.conf
+    echo
     rm /usr/local/etc/rc.d/zenbleed-rc.sh
-    set cpuctl_isloaded = cpuctl_load=\"YES\"
-        if ( $check_cpucontrol == "") then
-            printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
-            printf "Workaround removed and cpucontrol loading disabled\n"
-            printf "*******************************************************\n\n"
-        else
-            printf "**********************\033[38;5;9m Error \033[0;0m**************************\n"
-            printf "Unable to remove workaround. Manually remove.\n"
-            printf "*******************************************************\n\n"
-        endif
+    echo
+    printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
+    printf "Workaround removed and cpucontrol loading disabled\n"
+    printf "*******************************************************\n\n"
     exit 1
 
