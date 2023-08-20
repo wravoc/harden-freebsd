@@ -144,7 +144,7 @@ endif
 printf "**********\033[38;5;75m Searching Matching CPU Updates \033[0;0m*************\n"  
 printf "*******************************************************\n\n"
 
-set count = 0
+set count = 1
 foreach micro_id ( $microcodes )
     if ( $cpu_id == $micro_id ) then
         @ count = "$count" + 1
@@ -155,9 +155,6 @@ foreach micro_id ( $microcodes )
     endif
     @ count = "$count" + 1
 end
-
-printf "***************\033[38;5;9m No Matching CPU Update \033[0;0m****************\n"  
-printf "*******************************************************\n\n"
 
 set count = 0
 foreach model ( $ZenBleeders:q )
@@ -171,7 +168,7 @@ foreach model ( $ZenBleeders:q )
 end
 
 
-if ( $amd_sysctl_check == "AMD" && '$amd_model' == "EPYC-Rome" ) then
+if ( $amd_sysctl_check == "AMD" && "$amd_model" == "EPYC-Rome" ) then
     printf "****************\033[38;5;76m CPU Update Available \033[0;0m*****************\n"
     printf "Would you like to apply the AMD CPU microcode update?\n"
     printf "*******************************************************\n\n"
