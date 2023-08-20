@@ -231,14 +231,15 @@ if ( $amd_sysctl_check == "AMD" && "$amd_model" == "EPYC-Rome" ) then
     endsw
 else if ( $amd_sysctl_check == "AMD" && $zenbleeding == true ) then
     printf "********************\033[38;5;76m Zenbleed Found \033[0;0m********************\n"
-    printf "*******************************************************\n\n"
+    printf "*******************************************************\n"
     printf "Executing workaround\n"
-    printf "*******************************************************\n\n"
+    printf "*******************************************************\n"
     printf "*******************************************************\n\n"
     cp zenbleed-rc.sh /usr/local/etc/rc.d/
     chmod 755 /usr/local/etc/rc.d
     service zenbleed-rc.sh enable
     service zenbleed-rc.sh start
+    echo
     set workaround_status = `service -e | grep zenbleed-rc.sh`
         if ( $workaround_status == /usr/local/etc/rc.d/zenbleed-rc.sh ) then
             printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
