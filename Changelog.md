@@ -1,3 +1,8 @@
+## August 20, 2023
+* Printing clean-up
+* Fixed error in microcode matching
+* Fixed Virtual Machine vs Bare Metal c shell bug in string matching
+
 ## August 19, 2023
 * Zenbleed_workdaround.csh fixes
     * at reminder fixes
