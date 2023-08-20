@@ -1,3 +1,9 @@
+## August 19, 2023
+* Zenbleed_workdaround.csh fixes
+    * at reminder fixes
+    * CPU Model detection fixed
+* AMD Threadripper Pros are still not being detected properly
+
 ## August 13, 2023
 * Updated to give notice that no Zenbleed affected CPU was found.
 

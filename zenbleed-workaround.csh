@@ -144,29 +144,34 @@ endif
 printf "**********\033[38;5;75m Searching Matching CPU Updates \033[0;0m*************\n"  
 printf "*******************************************************\n\n"
 
-set count = 1
+set count = 0
 foreach micro_id ( $microcodes )
-@ count = "$count" + 1
     if ( $cpu_id == $micro_id ) then
+        @ count = "$count" + 1
         set microcode_update = $microcodes[$count]
         printf "**************\033[38;5;75m Found Matching CPU Update \033[0;0m**************\n"  
         printf "\033[1m$microcodes[$count]\033[0m\n"
         printf "*******************************************************\n\n"
     endif
+    @ count = "$count" + 1
 end
 
-set count = 1
-foreach model ( $ZenBleeders )
+printf "***************\033[38;5;9m No Matching CPU Update \033[0;0m****************\n"  
+printf "*******************************************************\n\n"
+
+set count = 0
+foreach model ( $ZenBleeders:q )
 @ count = "$count" + 1
-    if ( $amd_model == $model ) then
+    if ( "$amd_model" == "$model" ) then
         set zenbleeding = true
+        break
     else
         set zenbleeding = false
     endif
 end
 
 
-if ( $amd_sysctl_check == "AMD" && $amd_model == "EPYC-Rome" ) then
+if ( $amd_sysctl_check == "AMD" && '$amd_model' == "EPYC-Rome" ) then
     printf "****************\033[38;5;76m CPU Update Available \033[0;0m*****************\n"
     printf "Would you like to apply the AMD CPU microcode update?\n"
     printf "*******************************************************\n\n"
@@ -227,36 +232,39 @@ if ( $amd_sysctl_check == "AMD" && $amd_model == "EPYC-Rome" ) then
             printf "Exiting...\n"
             exit 1
     endsw
-else if ( $amd_sysctl_check == "AMD" && $zenbleeding ) then
+else if ( $amd_sysctl_check == "AMD" && $zenbleeding == true ) then
     printf "********************\033[38;5;76m Zenbleed Found \033[0;0m********************\n"
+    printf "*******************************************************\n\n"
     printf "Executing workaround\n"
+    printf "*******************************************************\n\n"
     printf "*******************************************************\n\n"
     cp zenbleed-rc.sh /usr/local/etc/rc.d/
     chmod 755 /usr/local/etc/rc.d
     service zenbleed-rc.sh enable
     service zenbleed-rc.sh start
-    set workaround_status = `service -e | grep zenbleed_rc.sh`
+    set workaround_status = `service -e | grep zenbleed-rc.sh`
         if ( $workaround_status == /usr/local/etc/rc.d/zenbleed-rc.sh ) then
             printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
-            printf "Workaround Active \033[1mUpon Reboot\033[0m"
+            printf "Workaround Active \033[1mUpon Reboot\033[0m\n"
             printf "*******************************************************\n\n"
         else
             printf "**********************\033[38;5;9m Failure \033[0;0m*************************\n"
-            printf "Workaround Activation \033[1mFailed\033[0m"
+            printf "Workaround Activation \033[1mFailed\033[0m\n"
             printf "Please activate manually\n"
             printf "*******************************************************\n\n"
             exit 1
         endif
     printf "*********************\033[38;5;76m Reminder \033[0;0m*************************\n"
-    printf "Would you like to set a text file reminder to remove the workarond in December?\n"
+    printf "Set a reminder to remove the workarond in December?\n"
     printf "*******************************************************\n\n"
     printf "\033[38;5;75m[yes/no]:\033[0m  "
     set reminder_answer =  $<:l:l:l
     switch ($reminder_answer)
         case 'yes':
             printf "at 1pm 12/21/2023<<ENDMARKER\n touch REMINDER-AMD-Zenbleed-Removal\nENDMARKER\n" > $HOME/zenbleed-at-reminder.sh
-            chmod 750 zenbleed-at-reminder.sh
-            source zenbleed-at-reminder.sh
+            chmod 750 $HOME/zenbleed-at-reminder.sh
+            source $HOME/zenbleed-at-reminder.sh
+            echo
             printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
             printf "at command set to create text file reminder 12/21/2023\n"
             printf "*******************************************************\n\n"
@@ -264,8 +272,9 @@ else if ( $amd_sysctl_check == "AMD" && $zenbleeding ) then
             breaksw
         case 'y':
             printf "at 1pm 12/21/2023<<ENDMARKER\n touch REMINDER-AMD-Zenbleed-Removal\nENDMARKER\n" > $HOME/zenbleed-at-reminder.sh
-            chmod 750 zenbleed-at-reminder.sh
-            source zenbleed-at-reminder.sh
+            chmod 750 $HOME/zenbleed-at-reminder.sh
+            source $HOME/zenbleed-at-reminder.sh
+            echo
             printf "*********************\033[38;5;76m Success \033[0;0m*************************\n"
             printf "at command set to create text file reminder 12/21/2023\n"
             printf "*******************************************************\n\n"
@@ -277,7 +286,7 @@ else if ( $amd_sysctl_check == "AMD" && $zenbleeding ) then
         case 'no':
             printf "Exiting...\n"
             exit
-else if !( $vm_check == "" && $amd_model == "Rome") then
+else if ( $vm_check != "none") then
     printf "\n**********************\033[38;5;75m VM Found \033[0;0m***********************\n" 
     printf "\033[1mVirtual Machine\033[0m: $vm_check\n"
     printf "VM Hypervisors will not allow the ZenBleed workaround\n"
