@@ -1,3 +1,7 @@
+## August 22, 2023
+* Removed devcpu-data-amd as the re-worked port installs both AMD and Intel with command `devcpu-data`
+    * https://cgit.freebsd.org/ports/commit/?id=bc7829212d153aeff69b439d08e2e3001ef88ba3
+
 ## August 20, 2023
 * Printing clean-up
 * Fixed error in microcode matching

@@ -185,10 +185,9 @@ if ( $amd_sysctl_check == "AMD" && "$amd_model" == "EPYC-Rome" ) then
             printf "cpu_microcode_name"" added to /boot/loader.conf\n"
             printf "microcode_update_enable="YES" added to /etc/rc.conf\n\n"
             printf "\033[1mInstalling Update Utilities:\033[0m\n"
-            printf "pkg install devcpu-data-amd\n"
             printf "pkg install devcpu-data\n"
             printf "*******************************************************\n\n"
-            pkg install devcpu-data-amd devcpu-data
+            pkg install devcpu-data
             wget https://github.com/platomav/CPUMicrocodes/blob/master/AMD/$microcode_update
             cp $microcode_update /boot/firmware
             service microcode_update start
@@ -208,10 +207,9 @@ if ( $amd_sysctl_check == "AMD" && "$amd_model" == "EPYC-Rome" ) then
             printf "cpu_microcode_name"" added to /boot/loader.conf\n"
             printf "microcode_update_enable="YES" added to /etc/rc.conf\n\n"
             printf "\033[1mInstalling Update Utilities:\033[0m\n"
-            printf "pkg install devcpu-data-amd\n"
             printf "pkg install devcpu-data\n"
             printf "*******************************************************\n\n"
-            pkg install devcpu-data-amd devcpu-data
+            pkg install devcpu-data
             wget https://github.com/platomav/CPUMicrocodes/blob/master/AMD/$microcode_update
             cp $microcode_update /boot/firmware
             service microcode_update start
