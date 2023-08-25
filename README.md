@@ -8,7 +8,29 @@ This script is also targeted to new users of FreeBSD so that they may leverage y
 
 Each of the security settings was researched, assessed, and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability.
 
+
 ---
+
+
+## Known Incompatibilities (Insecure) 08/25/2023
+* VM: 
+    * VirtualBox Shared Folders
+* Workstation: 
+    * **Firefox, Chromium** explicity use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
+        * Conflicts with `kern.elf64.allow_wx` 
+    * Linux Binary Compatibility
+* Server: Nginx
+
+
+## Verified Compatible (Secure)
+* Workstation: 
+    * Librewolf, Qutebrowser, Transmission, Evolution, RhythmBox, VLC, Abiword, Gimp, Inkscape, Spacemacs, Git
+* Server: 
+    * Apache (w/o memcache), OpenSMTPD, MariaDB `have_dynamic_loading=YES`
+
+
+---
+
 
 ## FreeBSD Security Advisories
 ### Remote denial of service in IPv6 fragment reassembly
@@ -27,7 +49,9 @@ Each of the security settings was researched, assessed, and chosen as a set of m
     * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
     * **Mitigation**: Intel Microcode Update Expected 
 
+
 ---
+
 
 ## New Features in 3.0.1
 * ZenBleed Workaround
