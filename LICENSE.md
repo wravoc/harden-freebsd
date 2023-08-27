@@ -33,7 +33,7 @@ Non-Commercial usage, retain and forward author and license data. Modify existin
 * **Modify** is defined as making changes to the Execution of the Software in conformance with the existing Execution process in majority, utilizing the same data types of input and output originally used by the Software, retaining the intended use of the Execution of the Software in superset of subset of solutions, workflows, processing, intake, and production in general, but not in detail. 
 * **Execute** is defined as having a calculating device calculate the Software. 
 * **Intelligence** is defined as having the ability to solve complex problems with judgement.
-* **Human** is defined as Homo sapiens birthed from another living Female Home sapiens.
+* **Human** is defined as Homo sapiens birthed from another living Female Homo sapiens.
 
 
 

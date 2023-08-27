@@ -228,7 +228,7 @@ if ( $amd_sysctl_check == "AMD" && "$amd_model" == "EPYC-Rome" ) then
             exit 1
     endsw
 else if ( $amd_sysctl_check == "AMD" && $zenbleeding == true ) then
-    printf "********************\033[38;5;76m Zenbleed Found \033[0;0m********************\n"
+    printf "********************\033[38;5;76m Zenbleed Found \033[0;0m*******************\n"
     printf "*******************************************************\n"
     printf "Executing workaround\n"
     printf "*******************************************************\n"
@@ -250,7 +250,7 @@ else if ( $amd_sysctl_check == "AMD" && $zenbleeding == true ) then
             printf "*******************************************************\n\n"
             exit 1
         endif
-    printf "*********************\033[38;5;76m Reminder \033[0;0m*************************\n"
+    printf "*********************\033[38;5;76m Reminder \033[0;0m************************\n"
     printf "Set a reminder to remove the workarond in December?\n"
     printf "*******************************************************\n\n"
     printf "\033[38;5;75m[yes/no]:\033[0m  "
