@@ -15,19 +15,26 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## Known Incompatibilities (Insecure) 08/25/2023
 * VM: 
     * VirtualBox Shared Folders
-* Workstation: 
+* **Workstation**: 
     * **Firefox, Chromium** explicity use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
         * Conflicts with `kern.elf64.allow_wx` 
     * Linux Binary Compatibility
-* Server: Nginx
+* **Server**: Nginx
 
 
-## Verified Compatible (Secure)
-* Workstation: 
+## Verified Compatible
+* **Workstation**: 
     * Librewolf, Qutebrowser, Transmission, Evolution, RhythmBox, VLC, Abiword, Gimp, Inkscape, Spacemacs, Git
-* Server: 
-    * Apache (w/o memcache), OpenSMTPD, MariaDB `have_dynamic_loading=YES`
+* **Server**: 
+    * Apache (w/o memcache), OpenSMTPD, MariaDB `have_dynamic_loading=YES` (with plugins)
 
+
+---
+
+
+## Includes
+* Desktop Wallpapers as a special gift to users of the Software
+* Directory (Hier)archy Visual Map, PDF, in /docs
 
 ---
 
@@ -56,10 +63,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## New Features in 3.0.1
 * ZenBleed Workaround
 * CPU microcode updating enabled in anticipation of Zenbleed and Downfall Patches
-* **Desktop Wallpapers as a special gift to users of the Software**
-    * QHE Wallpapers meet the [FreeBSD Foundation Trademark Usage Terms and Conditions](https://freebsdfoundation.org/legal/trademark-usage-terms-and-conditions/) where most FreeBSD digital art does not.
-    * An original digital art creation containing the FreeBSD Logo under T&C, the larger work is thus automatically copyrighted worldwide and may not be distributed, shared, or altered. 
-    * FreeBSD Foundation Members, Employees, and Associates are exempt from Digital Art restrictions
+
 
 
 ## August 11, 2023 Changelog
@@ -94,7 +98,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * AMD has patched the Rome family, server oriented series, of CPU's but all others are expected in December of 2023.
 * The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
 
-### Features
+### Zenbleed Features
 * Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
 * Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD) if available for your Zen2 CPU, currently, only "Rome" series as of August 11, 2023.
 * If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
@@ -115,7 +119,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ---
 
-## Features
+## Main Features
 
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
 * Sets passwords to blowfish encryption
@@ -293,7 +297,17 @@ The newly applied settings will not take affect until you reset your password.
 
 ## License Summary
 
+### Software
 Non-Commercial usage, retain and forward author and license data. Modify existing code as needed up to 25% while allowing unlimited new additions. The Software may use or be used by other software.
+
+
+### Digital Art
+All Original Digital Artists recieve automatic Copyright. 
+* Supplemental License [here](digital%20art/Quadhelion%20Engineering%20Universal%20Digital%20Art%20License.md)
+* QHE Wallpapers meet the [FreeBSD Foundation Trademark Usage Terms and Conditions](https://freebsdfoundation.org/legal/trademark-usage-terms-and-conditions/) where most FreeBSD digital art does not.
+* An original digital art creation containing the FreeBSD Logo under T&C, the larger work is thus automatically copyrighted worldwide and may not be distributed, shared, or altered. 
+* FreeBSD Foundation Members, Employees, and Associates are exempt from Digital Art restrictions
+
 
 
 ## Security Guidelines
