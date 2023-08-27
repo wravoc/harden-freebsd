@@ -43,7 +43,7 @@ The software **may not** be modified in the following ways:
 
 *  The Software logic itself cannot be changed *in majority*.
   * The original *application* to which the Software *was applied* cannot be modified.
-* Changing or replacing of **more than 25%** of the existing programming code of the Software is **not allowed**. This does not include error eandling, metadata or comments.
+* Changing or replacing of **more than 25%** of the existing programming code of the Software is **not allowed**. This does not include error handling, metadata or comments.
 * Programming language comments cannot be modified.
 * Metadata cannot be modified.
 * Author and License information cannot be modified.
