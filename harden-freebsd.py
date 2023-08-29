@@ -9,10 +9,10 @@ Example: sendmail_enable = "NONE"
 
 __author__ = "Elias Christopher Griffin"
 __url__ = "https://www.quadhelion.engineering"
-__license__ = "QHELP-OME-NC-ND-NAI"
+__license__ = "QHELP-OME-NC-ND-HI"
 __copyright__ = "https://www.quadhelion.engineering/QHELP-OME-NC-ND-NAI.html"
-__version__ = "2.0.2"
-__date__ = "06/27/2023"
+__version__ = "3.0.1"
+__date__ = "08/28/2023"
 __email__ = "elias@quadhelion.engineering"
 __status__ = "Production"
 
