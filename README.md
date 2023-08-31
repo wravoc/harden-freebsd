@@ -13,7 +13,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 
 ## Known Incompatibilities (Insecure) 08/25/2023
-* VM: 
+* **VM**: 
     * VirtualBox Shared Folders
 * **Workstation**: 
     * **Firefox, Chromium** explicity use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
