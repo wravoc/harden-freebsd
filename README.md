@@ -52,6 +52,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
     ```
 ### Downfall Intel CPU Vulnerability
 * https://downfall.page/
+    * Skylake and Kaby Lakes are also now tested as vulnerable
     * Computing devices based on Intel Core processors from the 6th Skylake to (including) the 11th Tiger Lake generation are affected.
     * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
     * **Mitigation**: Intel Microcode Update Expected 
@@ -216,6 +217,7 @@ The newly applied settings will not take affect until you reset your password.
 
 ## Setting Descriptors
 **Startup**
+
 * `kern_securelevel_enable = "YES"`
     * Enable access to other than permanently insecure modes
 * `microcode_update_enable = "YES"`
