@@ -11,119 +11,6 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ---
 
-
-## Known Incompatibilities (Insecure) 08/25/2023
-* **VM**: 
-    * VirtualBox Shared Folders
-* **Workstation**: 
-    * **Firefox, Chromium** explicity use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
-        * Conflicts with `kern.elf64.allow_wx` 
-    * Linux Binary Compatibility
-* **Server**: Nginx
-
-
-## Verified Compatible
-* **Workstation**: 
-    * Librewolf, Qutebrowser, Transmission, Evolution, RhythmBox, VLC, Abiword, Gimp, Inkscape, Spacemacs, Git
-* **Server**: 
-    * Apache (w/o memcache), OpenSMTPD, MariaDB `have_dynamic_loading=YES` (with plugins)
-
-
----
-
-
-## Includes
-* Desktop Wallpapers as a special gift to users of the Software
-* Directory (Hier)archy Visual Map, PDF, in /docs
-
----
-
-
-## FreeBSD Security Advisories
-### Remote denial of service in IPv6 fragment reassembly
-* `net.inet6.ip6.maxfrags = 0` [(*)](https://www.freebsd.org/security/advisories/FreeBSD-SA-23:06.ipv6.asc)
-    * **Official FreeBSD Security Advisory Workaround** 
-    * If using pf to scrub framents you do **not** need this workaround
-    * Add the directive above to `[SYSTEM} settings.ini` if not using pf scrub, and until you can safely patch the system
-    ```
-    root@freebsd:~# freebsd-update fetch
-    root@freebsd:~# freebsd-update install
-    root@freebsd:~# shutdown -r +10min "Rebooting for a security update"
-    ```
-### Downfall Intel CPU Vulnerability
-* https://downfall.page/
-    * Skylake and Kaby Lakes are also now tested as vulnerable
-    * Computing devices based on Intel Core processors from the 6th Skylake to (including) the 11th Tiger Lake generation are affected.
-    * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
-    * **Mitigation**: Intel Microcode Update Expected 
-
-
----
-
-
-## New Features in 3.0.1
-* ZenBleed Workaround
-* CPU microcode updating enabled in anticipation of Zenbleed and Downfall Patches
-
-
-
-## August 11, 2023 Changelog
-* The rc script has been updated for better performance and stability 
-    * There is no positive value cases I can find for removing the chicken-bit during operation which on the contrary may produce unexpected results as with other workarounds of this type
-    * Rebooting without the rc script running returns the OS to an unset chicken-bit state which obviates the need to have a `rc` chicken-bit removal function. 
-        * The user chooses the workaround or not without the rc script making available CPU state changes while in operation possibly inducing kernel panics
-        * Simply using the `remove` argument and rebooting will return the AMD Zenbleed vulnerability -> MSR state to default
-* Fixed Syntax errors and word clarity in the main workaround file
-* Added a prompted reminder function using `at` to create a file in the home directory reminding the user to use the official patch due at that time and remove the workaround
-
-
-*Full [Changelog](Changelog.md)*
-
-
-## Addtional Software
-* Scripts included to verify the implementation 
-    * Kernel vulnerablity diagnosis provided by [Stéphane Lesimple's](https://github.com/speed47) spectre-meltdown-checker
-        * `cd vendor`
-        * `chmod 750 spectre-meltdown-checker.sh`
-        * `sudo ./spectre-meltdown-checker.sh`
-        * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, [CVE-2018-12207](https://www.freebsd.org/security/advisories/FreeBSD-SA-19:25.mcepsc.asc)
-    * MMAP, MProtect vulnerability diagnosis provided by [u/zabolekar](https://www.reddit.com/r/BSD/comments/10isrl3/notes_about_mmap_mprotect_and_wx_on_different_bsd/)
-        * `cd util`
-        * `cc mmap_protect.c` 
-        * `./a.out`
-        * You should have two successes
-
-
-## Zenbleed Workaround
-* *I could only do very limited testing on VM's, please submit issues!*
-* [Security Engineer's Discovery & Write-Up](https://lock.cmpxchg8b.com/zenbleed.html)
-* [Affects AMD Zen 2 Chipset Family](https://nakedsecurity.sophos.com/2023/07/26/zenbleed-how-the-quest-for-cpu-performance-could-put-your-passwords-at-risk/)
-* Mitigation/workaround suggested by discovering Security Engineer **will not work in Virtual Machines**
-* AMD has patched the Rome family, server oriented series, of CPU's but all others are expected in December of 2023.
-* The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
-
-### Zenbleed Features
-* Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
-* Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD) if available for your Zen2 CPU, currently, only "Rome" series as of August 11, 2023.
-* If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
-* Only if a Zenbleed vulnerable CPU is detected a CPU chicken-bit is be set every boot via a provided rc script
-* Prompts to make a reminder to remove the script using `at` to create a file called `REMINDER-AMD-Zenbleed-Removal` in home directory on the 2023 December Solstice
-
-
-### Execute
-* `cd util`
-* `chmod 750 zenbleed-workaround.csh`
-* `sudo ./zenbleed-workaround.csh`
-
-### Arguments
-* `./zenbleed-workaround.csh clean` removes the CPU microcode/firmware utilities as a security measure once Zenbleed patching is complete
-    * Do not use `clean` if you still need the workaround on baremetal as it uses cpucontrol.
-* `./zenbleed-workaround.csh remove` removes the rc script for performance reasons or once the patch is applied from AMD in Decemeber 2023. 
-    * In the case of an AMD Zenbleed fully patched CPU, follow `remove` with `clean` for security purposes.
-
-
----
-
 ## Main Features
 
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
@@ -138,6 +25,111 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * System Logging to `/var/log/messages` and Script Logging to `/var/log/harden-freebsd.log`
 * Pretty prints color output of script execution to console while running
 
+---
+
+
+### Includes
+* Desktop Wallpapers as a special gift to users of the Software
+* Directory (Hier)archy Visual Map, PDF, in /docs
+
+---
+
+
+### New Features in 3.0.1
+* ZenBleed Workaround
+* CPU microcode updating enabled in anticipation of Zenbleed and Downfall Patches
+
+
+---
+
+
+## Known Incompatibilities (Insecure) 09/7/2023
+* **VM**: 
+    * VirtualBox Shared Folders
+* **Workstation**: 
+    * **Firefox, Chromium** explicity use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
+        * Conflicts with `kern.elf64.allow_wx` 
+    * Linux Binary Compatibility
+* **Server**: Nginx
+
+
+### Verified Compatible
+* **Workstation**: 
+    * Librewolf, Qutebrowser, Transmission, Evolution, RhythmBox, VLC, Abiword, Gimp, Inkscape, Spacemacs, Git
+* **Server**: 
+    * Apache (w/o memcache), OpenSMTPD, MariaDB `have_dynamic_loading=YES` (with plugins)
+
+
+---
+
+
+## FreeBSD Security Advisories
+**9/6/2023:**
+https://www.freebsd.org/security/advisories/
+
+* WiFi Encryption Bypass
+* IPv6 Fragment Spoofing
+    ```
+    root@freebsd:~# freebsd-update fetch
+    root@freebsd:~# freebsd-update install
+    root@freebsd:~# shutdown -r +10min "Rebooting for a security update"
+    ```
+
+### Downfall Intel CPU Vulnerability
+* https://downfall.page/
+    * Skylake and Kaby Lakes are also now tested as vulnerable
+    * Computing devices based on Intel Core processors from the 6th Skylake to (including) the 11th Tiger Lake generation are affected.
+    * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
+    * **Mitigation**: Intel Microcode Update Expected 
+
+---
+
+
+## Addtional Software
+* Scripts included to verify the implementation. Run before and after the hardening.
+    * Kernel vulnerablity diagnosis provided by [Stéphane Lesimple's](https://github.com/speed47) spectre-meltdown-checker
+        * `cd vendor`
+        * `chmod 750 spectre-meltdown-checker.sh`
+        * `sudo ./spectre-meltdown-checker.sh`
+        * You should only be left with the MCEPSC, Machine Check Exception on Page Size Change Vulnerability, [CVE-2018-12207](https://www.freebsd.org/security/advisories/FreeBSD-SA-19:25.mcepsc.asc)
+    * MMAP, MProtect vulnerability diagnosis provided by [u/zabolekar](https://www.reddit.com/r/BSD/comments/10isrl3/notes_about_mmap_mprotect_and_wx_on_different_bsd/)
+        * `cd util`
+        * `cc mmap_protect.c` 
+        * `./a.out`
+        * You should have two successes
+
+
+### Zenbleed Workaround
+* *I could only do very limited testing on VM's, please submit issues!*
+* [Security Engineer's Discovery & Write-Up](https://lock.cmpxchg8b.com/zenbleed.html)
+* [Affects AMD Zen 2 Chipset Family](https://nakedsecurity.sophos.com/2023/07/26/zenbleed-how-the-quest-for-cpu-performance-could-put-your-passwords-at-risk/)
+* Mitigation/workaround suggested by discovering Security Engineer **will not work in Virtual Machines**
+* AMD has patched the Rome family, server oriented series, of CPU's but all others are expected in December of 2023.
+* The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
+
+#### Zenbleed Features
+* Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
+* Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD) if available for your Zen2 CPU, currently, only "Rome" series as of August 11, 2023.
+* If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
+* Only if a Zenbleed vulnerable CPU is detected a CPU chicken-bit is be set every boot via a provided rc script
+* Prompts to make a reminder to remove the script using `at` to create a file called `REMINDER-AMD-Zenbleed-Removal` in home directory on the 2023 December Solstice
+
+
+#### Execute
+* `cd util`
+* `chmod 750 zenbleed-workaround.csh`
+* `sudo ./zenbleed-workaround.csh`
+
+#### Arguments
+* `./zenbleed-workaround.csh clean` removes the CPU microcode/firmware utilities as a security measure once Zenbleed patching is complete
+    * Do not use `clean` if you still need the workaround on baremetal as it uses cpucontrol.
+* `./zenbleed-workaround.csh remove` removes the rc script for performance reasons or once the patch is applied from AMD in Decemeber 2023. 
+    * In the case of an AMD Zenbleed fully patched CPU, follow `remove` with `clean` for security purposes.
+
+
+---
+---
+# Main Details
 
 ## Requirements
 * FreeBSD 13.1, 13.2
@@ -200,7 +192,9 @@ Those files are:
 
 The newly applied settings will not take affect until you reset your password.
 
-## Automatic Jail Lockdown/Management Strategies
+---
+
+#### Automatic Jail Lockdown/Management Strategies
 
 1. Set the correct paths to jailed confs in `harden-freebsd.py` lines 32-38 and run for each jail.
 2. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon next reboot. To update all jails simply copy `settings.ini` with your own copy script to all appropriate locations for uptake. 
@@ -219,7 +213,7 @@ The newly applied settings will not take affect until you reset your password.
 ---
 
 
-## Setting Descriptors
+# Setting Descriptors
 **Startup**
 
 * `kern_securelevel_enable = "YES"`
@@ -297,6 +291,55 @@ The newly applied settings will not take affect until you reset your password.
     * Enable ASLR for Position-Independent Executables (PIE) binaries
 
 
+---
+
+### August 11, 2023 Changelog
+* The rc script has been updated for better performance and stability 
+    * There is no positive value cases I can find for removing the chicken-bit during operation which on the contrary may produce unexpected results as with other workarounds of this type
+    * Rebooting without the rc script running returns the OS to an unset chicken-bit state which obviates the need to have a `rc` chicken-bit removal function. 
+        * The user chooses the workaround or not without the rc script making available CPU state changes while in operation possibly inducing kernel panics
+        * Simply using the `remove` argument and rebooting will return the AMD Zenbleed vulnerability -> MSR state to default
+* Fixed Syntax errors and word clarity in the main workaround file
+* Added a prompted reminder function using `at` to create a file in the home directory reminding the user to use the official patch due at that time and remove the workaround
+
+
+*Full [Changelog](Changelog.md)*
+
+---
+
+## FreeBSD Laptop Picks
+https://wiki.freebsd.org/Laptops/
+
+* Have every check box or insignificant issues*
+* Bigger than 13" Screen
+* Made within last 8 years
+
+&#127775; [Gigabyte_Aero_15X](https://wiki.freebsd.org/Laptops/Gigabyte_Aero_15X)
+
+&#9734; [HP_EliteBook_1040_G3](https://wiki.freebsd.org/Laptops/HP_EliteBook_1040_G3)*
+
+[Thinkpad_T550](https://wiki.freebsd.org/Laptops/Thinkpad_T550) and W550s
+
+&#11088; [Thinkpad_T495](https://wiki.freebsd.org/Laptops/Thinkpad_T495)
+
+* T495*s* (lesser model, Vega 8 Graphics instead of 10)
+
+[Thinkpad_T490](https://wiki.freebsd.org/Laptops/Thinkpad_T490s)
+
+* T490*s* (lesser model)
+
+
+#### Special Mentions
+&#127776; "Think Penguin" **Penguin T4** can be requested to have FreeBSD Pre-Installed
+* 10-Core Intel i5-1335U processor (up to 4.6GHz)
+* 15.6" Screen
+* User replaceable battery
+* Intel® Iris® Xe Graphics
+* 64GB RAM available
+* 4TB NVME SDD HDD available
+
+Lenovo Legion 5 15ACH6H 
+* WiFi driver supported in Linux 6.5, expected compatibility in FreeBSD 14.0 release
 
 ---
 
