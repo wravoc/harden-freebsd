@@ -314,17 +314,17 @@ https://wiki.freebsd.org/Laptops/
 * Bigger than 13" Screen
 * Made within last 8 years
 
-&#127775; [Gigabyte_Aero_15X](https://wiki.freebsd.org/Laptops/Gigabyte_Aero_15X)
+&#127775; [Gigabyte Aero 15X](https://wiki.freebsd.org/Laptops/Gigabyte_Aero_15X)
 
-&#9734; [HP_EliteBook_1040_G3](https://wiki.freebsd.org/Laptops/HP_EliteBook_1040_G3)*
+&#9734; [HP EliteBook 1040 G3](https://wiki.freebsd.org/Laptops/HP_EliteBook_1040_G3)*
 
-[Thinkpad_T550](https://wiki.freebsd.org/Laptops/Thinkpad_T550) and W550s
+[Thinkpad T550](https://wiki.freebsd.org/Laptops/Thinkpad_T550) and W550s
 
-&#11088; [Thinkpad_T495](https://wiki.freebsd.org/Laptops/Thinkpad_T495)
+&#11088; [Thinkpad T495](https://wiki.freebsd.org/Laptops/Thinkpad_T495)
 
 * T495*s* (lesser model, Vega 8 Graphics instead of 10)
 
-[Thinkpad_T490](https://wiki.freebsd.org/Laptops/Thinkpad_T490s)
+[Thinkpad T490](https://wiki.freebsd.org/Laptops/Thinkpad_T490s)
 
 * T490*s* (lesser model)
 
