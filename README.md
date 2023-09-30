@@ -4,7 +4,7 @@
 
 FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?query=security&sektion=7&manpath=freebsd-release#SECURING_THE_KERNEL_CORE,_RAW_DEVICES,_AND_FILE_SYSTEMS). This script will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning, and easier jail management. All existing entries in all confs will remain untouched unless they are modified in the settings file.
 
-This script is also targeted to new users of FreeBSD so that they may leverage years of security contributions by the entire BSD community across all spectra, implemented on thier system in seconds.
+This script is also targeted to new users of FreeBSD so that they may leverage years of security contributions by the entire BSD community across all spectra, implemented on their system in seconds.
 
 Each of the security settings was researched, assessed, and chosen as a set of mitigations for maximizing threat reduction while minimizing restriction of system capability and availability.
 
@@ -47,7 +47,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * **VM**: 
     * VirtualBox Shared Folders
 * **Workstation**: 
-    * **Firefox, Chromium** explicity use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
+    * **Firefox, Chromium** explicitly use [shared memory](https://www.usna.edu/Users/cs/crabbe/SI411/current/security/memory.html) allowing data access between private and non-private windows, tabs as well as other currently running apps.
         * Conflicts with `kern.elf64.allow_wx` 
     * Linux Binary Compatibility
 * **Server**: Nginx
@@ -84,10 +84,10 @@ https://www.freebsd.org/security/advisories/
 
 ---
 
+## Additional Software
 
-## Addtional Software
 * Scripts included to verify the implementation. Run before and after the hardening.
-    * Kernel vulnerablity diagnosis provided by [Stéphane Lesimple's](https://github.com/speed47) spectre-meltdown-checker
+    * Kernel vulnerability diagnosis provided by [Stéphane Lesimple's](https://github.com/speed47) spectre-meltdown-checker
         * `cd vendor`
         * `chmod 750 spectre-meltdown-checker.sh`
         * `sudo ./spectre-meltdown-checker.sh`
@@ -168,7 +168,7 @@ zfs mount -a
 ## Customization
 
 #### 64bit vs 32bit
-Most tunable mitigations for 64bit are already included by default in FreeBSD 13.1 so 32bit directives were included for coverage. I can see no affect from setting the 32bit mitigations on 64bit systems, they are simply ignored. For clarity on unknown hardware, hardware mode, VM, or cloud use the following commands:
+Most tunable mitigations for 64bit are already included by default in FreeBSD 13.1 so 32bit directives were included for coverage. I can see no effect from setting the 32bit mitigations on 64bit systems, they are simply ignored. For clarity on unknown hardware, hardware mode, VM, or cloud use the following commands:
 * CPU: `sysctl hw.model hw.machine hw.ncpu`
 * Bits: `getconf LONG_BIT`
 
@@ -190,7 +190,7 @@ Those files are:
 
 #### Secure Password Settings
 
-The newly applied settings will not take affect until you reset your password.
+The newly applied settings will not take effect until you reset your password.
 
 ---
 
@@ -204,9 +204,9 @@ The newly applied settings will not take affect until you reset your password.
 `@reboot /path/to/harden-freebsd.py`
 
 3. Have all jails pointing to the same rc script via `exec.start` and set paths in the script pointing to the same location modified by the script paths. 
-4. Add new jail specific entires to `settings.ini [SYSTEM]` section for sysctl.conf udpate
+4. Add new jail specific entires to `settings.ini [SYSTEM]` section for sysctl.conf update
    - `security.jail.* = 0`
-5. Use mutiple copies of the script and settings.ini for each jail
+5. Use multiple copies of the script and settings.ini for each jail
 6. Put it in your template
 
 
@@ -277,7 +277,7 @@ The newly applied settings will not take affect until you reset your password.
 
 **Kernel**
 * `security.bsd.allow_destructive_dtrace = "0"`
-    * Disallow DTrace to terminate proccesses
+    * Disallow DTrace to terminate processes
     * Test DTrace hardening: Using all 3 commands should result in `Permission denied` or `Destructive actions not allowed`:
     * `dtrace -wn 'tcp:::connect-established { @[args[3]->tcps_raddr] = count(); }'`
     * `dtrace -wqn tick-1sec'{system("date")}'`
@@ -351,7 +351,7 @@ Non-Commercial usage, retain and forward author and license data. Modify existin
 
 
 ### Digital Art
-All Original Digital Artists recieve automatic Copyright. 
+All Original Digital Artists receive automatic Copyright. 
 * Supplemental License [here](digital%20art/Quadhelion%20Engineering%20Universal%20Digital%20Art%20License.md)
 * QHE Wallpapers meet the [FreeBSD Foundation Trademark Usage Terms and Conditions](https://freebsdfoundation.org/legal/trademark-usage-terms-and-conditions/) where most FreeBSD digital art does not.
 * An original digital art creation containing the FreeBSD Logo under T&C, the larger work is thus automatically copyrighted worldwide and may not be distributed, shared, or altered. 
@@ -375,10 +375,9 @@ This script has no networking, accesses no sockets, and uses only standard libra
 
 Although this script is using `subprocess.run(shell=True)` the only possibility of shell injection is from the paths customized by the Licensee or unauthorized access to the filesystem the script resides on in order to perform unauthorized modifications to `settings.ini`or the Software which is not a vulnerability of the Software. 
 
-
 ### Latest Development Version
 
-[Quadhelion Engineering Code Repository](https://got.quadhelion.engineering)
+[Quadhelion Engineering Code Repository](https://quadhelion.dev)
 
 
 
