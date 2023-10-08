@@ -100,7 +100,6 @@ https://www.freebsd.org/security/advisories/
 
 
 ### Zenbleed Workaround
-* *I could only do very limited testing on VM's, please submit issues!*
 * [Security Engineer's Discovery & Write-Up](https://lock.cmpxchg8b.com/zenbleed.html)
 * [Affects AMD Zen 2 Chipset Family](https://nakedsecurity.sophos.com/2023/07/26/zenbleed-how-the-quest-for-cpu-performance-could-put-your-passwords-at-risk/)
 * Mitigation/workaround suggested by discovering Security Engineer **will not work in Virtual Machines**
