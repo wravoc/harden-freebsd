@@ -1,4 +1,5 @@
 .nova/Configuration.json
+.nova
 .DS_Store
 settings_test.ini
 TODO
