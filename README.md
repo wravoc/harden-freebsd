@@ -64,11 +64,8 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 
 ## FreeBSD Security Advisories
-**9/6/2023:**
 https://www.freebsd.org/security/advisories/
 
-* WiFi Encryption Bypass
-* IPv6 Fragment Spoofing
     ```
     root@freebsd:~# freebsd-update fetch
     root@freebsd:~# freebsd-update install
