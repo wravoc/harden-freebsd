@@ -67,7 +67,6 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 https://www.freebsd.org/security/advisories/
 
 **FreeBSD Update Procedure**
-
     ```
     root@freebsd:~# freebsd-update fetch
     root@freebsd:~# freebsd-update install
