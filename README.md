@@ -16,12 +16,11 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
 * Sets passwords to blowfish encryption
 * Sets passwords to expire at 120 days
-* Disables sendmail completely
 * Removes `other` write permissions from key system files and folders
 * Allows only root for `cron` and `at`
 * Primitive flag verification catches simple errors
 * Modularizable within other tools
-* Automate any shell script
+* Automate any shell command
 * System Logging to `/var/log/messages` and Script Logging to `/var/log/harden-freebsd.log`
 * Pretty prints color output of script execution to console while running
 
@@ -34,11 +33,13 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ---
 
-
-### New Features in 3.0.1
-* ZenBleed Workaround
-* CPU microcode updating enabled in anticipation of Zenbleed and Downfall Patches
-
+### New Features in 3.1
+* A package audit is automatically run identifying vulnerabilities in installed packages and saves to file `pkg-audit-report`
+* A script argument can be given naming the settings.ini file you wish to use, mainly to toggle between secure and insecure, otherwise settings.ini is used
+    * A sample insecure file, for use in gaming for example, is included, please adjust as neccessary or makes any many files/tiers as you need
+* A script argument of "restore" is now available, overwriting the changed files with the original files saved during first run
+    * rc.conf, sysctl.conf, and loader.conf are restored. `login.conf` and the password changes are not reversed, neither are file permissions or at, cron adjustments
+* New wallpapers have been added with the assistance of [LimeWire BlueWillow](https://limewire.com/features/bluewillow-ai) v4 Artificial Intelligence image generator.
 
 ---
 
@@ -81,6 +82,22 @@ https://www.freebsd.org/security/advisories/
     * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
     * **Mitigation**: Intel Microcode Update Expected 
 
+
+### FreeBSD 14.0 Security Changes
+* New [Mitigations Manual](https://man.freebsd.org/cgi/man.cgi?query=mitigations&sektion=7&format=html)
+* New Kernel Address Sanitizer
+    * [KASAN](https://man.freebsd.org/cgi/man.cgi?query=kasan&sektion=9&format=html) is	a subsystem which leverages compiler instrumentation to	detect invalid memory accesses in the kernel.
+* The **Zenbleed bug affecting AMD Zen2 processors is now automatically mitigated** (via chicken bit), preventing misbehavior and data leaks on affected machines. If needed, applying the mitigation can be manually controlled via the machdep.mitigations.zenbleed.enable sysctl(8) knob. Please consult the new [mitigations(7)](https://man.freebsd.org/cgi/man.cgi?query=mitigations&sektion=7&format=html) manual page for more information.
+* Position Independent Executable (PIE) support enabled by default on x64
+* Address Space Layout Randomization (ASLR) is enabled by default on x64
+    * To disable for a single invocation, use the [proccontrol(1)](https://man.freebsd.org/cgi/man.cgi?query=proccontrol&sektion=1&format=html) command: `proccontrol -m aslr -s disable command.`
+    * To disable ASLR for all invocations of a binary, use the [elfctl(1)](https://man.freebsd.org/cgi/man.cgi?query=elfctl&sektion=1&format=html) command: `elfctl -e +noaslr file`
+* A workaround has been implemented for a hardware page invalidation problem on Intel Alder Lake (twelfth generation) and Raptor Lake (thirteenth generation) hybrid CPUs.
+* The default mail transport agent (MTA) is now the Dragonfly Mail Agent.
+* Support has been added to the kernel crypto for the XChaCha20-Poly1035 AEAD cipher.
+* The process visibility policy controlled by the `security.bsd.see_jail_proc` sysctl(8) knob was hardened.
+* The process visibility policy controlled by the `security.bsd.see_other_gids` sysctl(8) knob was fixed to consider the real group of a process instead of its effective group when determining whether the user trying to access the process is a member of one of the process' groups.
+
 ---
 
 ## Additional Software
@@ -97,40 +114,14 @@ https://www.freebsd.org/security/advisories/
         * `./a.out`
         * You should have two successes
 
-
-### Zenbleed Workaround
-* [Security Engineer's Discovery & Write-Up](https://lock.cmpxchg8b.com/zenbleed.html)
-* [Affects AMD Zen 2 Chipset Family](https://nakedsecurity.sophos.com/2023/07/26/zenbleed-how-the-quest-for-cpu-performance-could-put-your-passwords-at-risk/)
-* Mitigation/workaround suggested by discovering Security Engineer **will not work in Virtual Machines**
-* AMD has patched the Rome family, server oriented series, of CPU's but all others are expected in December of 2023.
-* The command to manually verify the chicken-bit has been set is `cpucontrol -m "0xc0011029" /dev/cpuctl0`
-
-#### Zenbleed Features
-* Sets the Model Specific Register chicken-bit exactly as suggested by the discovering Security Engineer
-* Patches the latest AMD microcode from [Platomov's GitHub Repository](https://github.com/platomav/CPUMicrocodes/tree/master/AMD) if available for your Zen2 CPU, currently, only "Rome" series as of August 11, 2023.
-* If in a Virtual Machine, check for EPYC Rome series CPU and apply AMD patch and exit if not Rome, as there is no other patch available yet and Hypervisor disallows the workaround.
-* Only if a Zenbleed vulnerable CPU is detected a CPU chicken-bit is be set every boot via a provided rc script
-* Prompts to make a reminder to remove the script using `at` to create a file called `REMINDER-AMD-Zenbleed-Removal` in home directory on the 2023 December Solstice
-
-
-#### Execute
-* `cd util`
-* `chmod 750 zenbleed-workaround.csh`
-* `sudo ./zenbleed-workaround.csh`
-
-#### Arguments
-* `./zenbleed-workaround.csh clean` removes the CPU microcode/firmware utilities as a security measure once Zenbleed patching is complete
-    * Do not use `clean` if you still need the workaround on baremetal as it uses cpucontrol.
-* `./zenbleed-workaround.csh remove` removes the rc script for performance reasons or once the patch is applied from AMD in Decemeber 2023. 
-    * In the case of an AMD Zenbleed fully patched CPU, follow `remove` with `clean` for security purposes.
-
-
 ---
+
+
 ---
 # Main Details
 
 ## Requirements
-* FreeBSD 13.1, 13.2
+* FreeBSD 14.0
 * Python 3.9.16
 
 
@@ -166,7 +157,7 @@ zfs mount -a
 ## Customization
 
 #### 64bit vs 32bit
-Most tunable mitigations for 64bit are already included by default in FreeBSD 13.1 so 32bit directives were included for coverage. I can see no effect from setting the 32bit mitigations on 64bit systems, they are simply ignored. For clarity on unknown hardware, hardware mode, VM, or cloud use the following commands:
+Most tunable mitigations for 64bit are already included by default in FreeBSD 14.0 so 32bit directives are now omitted.
 * CPU: `sysctl hw.model hw.machine hw.ncpu`
 * Bits: `getconf LONG_BIT`
 
@@ -218,7 +209,6 @@ The newly applied settings will not take effect until you reset your password.
     * Enable access to other than permanently insecure modes
 * `microcode_update_enable = "YES"`
     * Allow CPU microcode/firmware updates
-* Disable Sendmail
 * `syslogd_flags="-ss"`
     * Disallow syslogd to bind to a network socket
 * `clear_tmp_enable = "YES"`
@@ -257,13 +247,16 @@ The newly applied settings will not take effect until you reset your password.
 * `net.inet.ip.redirect = 0` 
     * Disallow ICMP host redirects
 * `net.inet.tcp.always_keepalive = 0`
-    * Disallow keeping open idle TCP connections
+    * Disallow keeping open idle TCP connections. This may need to be changed if you are serving
 * `net.inet.tcp.blackhole = 2` +(UDP)[(*)](https://man.freebsd.org/cgi/man.cgi?query=blackhole)
     * Packets that are received on a closed port will not initiate a reply
 * `net.inet.tcp.path_mtu_discovery = 0` [(*)](https://man.freebsd.org/cgi/man.cgi?query=tcp&sektion=4)
     * Disallows TCP to determine the minimum MTU size on any network that is currently in the path between two hosts
 * `net.inet.icmp.drop_redirect = 1`
     * Pairs with rc.conf startup, as once enabled, it is then set
+* `net.inet6.icmp6.rediraccept = 0`
+    * Disable ping IPv6 redirection mitigating ICMP attacks 
+    * Set to 1 if using FreeBSD as network appliance
 * `hw.mds_disable = 3` [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
     * Enable Microarchitectural Data Sampling Mitigation version `VERW`
     * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
@@ -282,23 +275,19 @@ The newly applied settings will not take effect until you reset your password.
     * `dtrace -qn tick-1sec'{system("date")}'`
 * `hw.ibrs_disable = "3"` [(*)](https://wiki.freebsd.org/SpeculativeExecutionVulnerabilities)
     * Prevent Spectre and Meltdown CPU Vulnerabilities, 3 for AUTO
-* `kern.elf32.aslr.stack = "3"` [(*)](https://wiki.freebsd.org/AddressSpaceLayoutRandomization)
-    * Address space layout randomization is used to increase the difficulty of performing a buffer overflow attack
-    * 64bit is enabled by default in 13.2 so you can set this to 0 for 64bit processors or remove
-* `kern.elf32.aslr.pie_enable = "1"`
-    * Enable ASLR for Position-Independent Executables (PIE) binaries
 
 
 ---
 
-### August 11, 2023 Changelog
-* The rc script has been updated for better performance and stability 
-    * There is no positive value cases I can find for removing the chicken-bit during operation which on the contrary may produce unexpected results as with other workarounds of this type
-    * Rebooting without the rc script running returns the OS to an unset chicken-bit state which obviates the need to have a `rc` chicken-bit removal function. 
-        * The user chooses the workaround or not without the rc script making available CPU state changes while in operation possibly inducing kernel panics
-        * Simply using the `remove` argument and rebooting will return the AMD Zenbleed vulnerability -> MSR state to default
-* Fixed Syntax errors and word clarity in the main workaround file
-* Added a prompted reminder function using `at` to create a file in the home directory reminding the user to use the official patch due at that time and remove the workaround
+### January 8, 2024 Changelog
+*If you are on FreeBSD 13.2 download the 3.0.1 release tag*
+
+* ZenBleed workaround removed
+* 32bit protections removed
+* Sendmail limitations removed since the 14.0 MTA in use is now the more secure DMA
+
+
+---
 
 
 *Full [Changelog](Changelog.md)*

@@ -1,3 +1,18 @@
+## January 16, 2024
+**New settings** 
+Enhanced DoS/DDoS mitigation
+* `net.inet6.icmp6.rediraccept = 0` to prevent ICMP attacks. Only FreeBSD as a network appliance would benefit enabling.
+* `net.inet.tcp.syncache.hashsize, cachelimit, and bucketlimit` Were last updated for 2016 Computing Hardware and should be made tunable, currently they are read-only and serve to make SYN FLOOD DoS attacks easier.
+
+## January 8, 2024
+* ZenBleed workaround removed as it is now enable by default in 14 release
+* 32bit protections removed as FreeBSD is focusing on 64bit and in the future dropping support for 32bit
+    * PIE, ASLR for 32bit
+* Sendmail limitations removed since the 14.0 MTA in use is now the more secure Dragonfly Mail Agent
+
+
+---
+
 ## August 22, 2023
 * Removed devcpu-data-amd as the re-worked port installs both AMD and Intel with command `devcpu-data`
     * https://cgit.freebsd.org/ports/commit/?id=bc7829212d153aeff69b439d08e2e3001ef88ba3

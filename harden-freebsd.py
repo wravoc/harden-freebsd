@@ -10,9 +10,9 @@ Example: sendmail_enable = "NONE"
 __author__ = "Elias Christopher Griffin"
 __url__ = "https://www.quadhelion.engineering"
 __license__ = "QHELP-OME-NC-ND-HI"
-__copyright__ = "https://www.quadhelion.engineering/QHELP-OME-NC-ND-NAI.html"
-__version__ = "3.0.1"
-__date__ = "08/28/2023"
+__copyright__ = "https://www.quadhelion.engineering/qhelp.html"
+__version__ = "3.1"
+__date__ = "01/20/2024"
 __email__ = "elias@quadhelion.engineering"
 __status__ = "Production"
 
@@ -25,10 +25,13 @@ import os, re, subprocess, syslog, configparser, shutil, sys
 _date = datetime.now()
 date_time = _date.strftime("%m/%d/%Y, %H:%M")
 
+
+# Setup for script argument processing 
+sysargs = sys.argv
 config = configparser.ConfigParser()
-config.read('settings.ini')
 
 
+# Setup to manipulate all the system files 
 harden_freebsd_log = Path("/var/log/harden-freebsd.log")
 rc_conf = Path("/etc/rc.conf")
 sysctl_conf = Path("/etc/sysctl.conf")
@@ -38,6 +41,7 @@ cron_access = Path("/var/cron/allow")
 at_access = Path("/var/at/at.allow")
 
 
+# Set the backup file names
 backup_suffix = ".original"
 rc_backup = rc_conf.with_name(rc_conf.name + backup_suffix)
 sysctl_backup = sysctl_conf.with_name(sysctl_conf.name + backup_suffix)
@@ -45,7 +49,30 @@ loader_backup = loader_conf.with_name(loader_conf.name + backup_suffix)
 login_backup = login_conf.with_name(login_conf.name + backup_suffix)
 
 
+# Handle script arguments
+sysargs = sys.argv
+config = configparser.ConfigParser()
 
+if len(sys.argv) == 2:
+    script_argument = sys.argv[1]
+    script_argument_path = Path(script_argument)
+    if script_argument_path.exists and script_argument_path.suffix == ".ini":
+        config.read(script_argument)
+    elif sys.argv[1] == "restore":
+        rc_conf.write_bytes(rc_backup.read_bytes())
+        sysctl_conf.write_bytes(sysctl_backup.read_bytes())
+        loader_conf.write_bytes(loader_backup.read_bytes())
+        print(f"\n*********************\033[38;5;76m Success \033[0;0m*************************")
+        print("Original rc.conf, sysctl.conf, loader.conf restored")
+        print(f"*******************************************************\n")
+        exit(0)
+    else:
+        pass
+else:
+    config.read('settings.ini')
+
+
+# Handle Errors
 def exception_handler(func):
     def intake(*args, **kwargs):
         try:
@@ -368,3 +395,9 @@ writeLog("script", "All files and directives validate")
 writeLog("script", "*********************************")
 writeLog("syslog", "SUCCESS: Hardening completed")
 
+print(f"\n*********************\033[38;5;76m Success \033[0;0m*************************")
+print("All files and directives validate")
+print("Package Security Report generated; pkg-audit-report")
+print(f"*******************************************************\n")
+
+# EOF
