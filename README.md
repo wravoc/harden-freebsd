@@ -35,8 +35,8 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ### New Features in 3.1
 * A package audit is automatically run identifying vulnerabilities in installed packages and saves to file `pkg-audit-report`
-* A script argument can be given naming the settings.ini file you wish to use, mainly to toggle between secure and insecure, otherwise settings.ini is used
-    * A sample insecure file, for use in gaming for example, is included, please adjust as neccessary or makes any many files/tiers as you need
+* A script argument can be given naming the settings ini file you wish to use, mainly to toggle between secure and insecure/performance, otherwise settings.ini is used
+    * A sample performance file, for use while gaming for example, is included, please adjust as neccessary or make any many ini/tiers as you need
 * A script argument of "restore" is now available, overwriting the changed files with the original files saved during first run
     * rc.conf, sysctl.conf, and loader.conf are restored. `login.conf` and the password changes are not reversed, neither are file permissions or at, cron adjustments
 * New wallpapers have been added with the assistance of [LimeWire BlueWillow](https://limewire.com/features/bluewillow-ai) v4 Artificial Intelligence image generator.
