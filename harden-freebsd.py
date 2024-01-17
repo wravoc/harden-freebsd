@@ -3,8 +3,12 @@
 """ 
 Harden FreeBSD system perms, settings.
 Set and reset rc, sysctl, login, confs; set file perms, run shell commands
-No arguments, only uses settings.ini file in the same directory.
-Example: sendmail_enable = "NONE"
+Uses ini file in the same directory.
+
+Usage:
+./harden-freebsd.py
+./harden-freebsd.py <ini file>
+./harden-freebsd.py restore
 """
 
 __author__ = "Elias Christopher Griffin"
