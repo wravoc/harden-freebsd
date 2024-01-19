@@ -1,7 +1,29 @@
+## January 19, 2024
+* Enabled pf firewall by default in settings.ini
+
+## January 17, 2024
+* After testing, re-introduced the Sendmail/MTA disable
+
 ## January 16, 2024
 **New settings** 
 Enhanced DoS/DDoS mitigation
-* `net.inet6.icmp6.rediraccept = 0` to prevent ICMP attacks. Only FreeBSD as a network appliance would benefit enabling.
+* `net.inet6.icmp6.rediraccept = 0` to prevent ICMP attacks. Only FreeBSD as a network appliance would benefit enabling this setting.
+* `net.inet.tcp.drop_synfin = 1` to mitigate TCP SYN-FIN attacks and stealth probing.
+* `net.inet.tcp.cc.algorithm=htcp` enable TCP congestion alleviation
+
+[H-TCP](https://www.sciencedirect.com/science/article/pii/S0965997821000399#bib0017) is a congestion control protocol for high-speed and long distance networks. It uses bandwidth estimation and changes the TCP window increase/decrease parameters according to the estimated minimal and maximal bandwidth. It takes into consideration that the parameter for additive increase should be small in slower networks and should be large in high-speed and long distance networks in order to achieve fast adaptation to the available bandwidth.
+
+DoS/DDoS mitigation via network performance tuning for high-speed network servers, used by default on Vultr FreeBSD 14.0 cloud servers.
+* `kern.ipc.maxsockbuf=67108864`
+* `net.inet.tcp.sendbuf_max=67108864`
+* `net.inet.tcp.recvbuf_max=67108864`
+* `net.inet.tcp.sendbuf_auto=1`
+* `net.inet.tcp.recvbuf_auto=1`
+* `net.inet.tcp.sendbuf_inc=16384`
+
+
+
+**NOTE**
 * `net.inet.tcp.syncache.hashsize, cachelimit, and bucketlimit` Were last updated for 2016 Computing Hardware and should be made tunable, currently they are read-only and serve to make SYN FLOOD DoS attacks easier.
 
 ## January 8, 2024

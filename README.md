@@ -14,6 +14,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## Main Features
 
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
+* Disables Sendmail completely, recommend `pkg install opensmtpd`
 * Sets passwords to blowfish encryption
 * Sets passwords to expire at 120 days
 * Removes `other` write permissions from key system files and folders
@@ -30,16 +31,21 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ### Includes
 * Desktop Wallpapers as a special gift to users of the Software
 * Directory (Hier)archy Visual Map, PDF, in /docs
+* robots.txt to deny AI use of your intellectual property, with inline `nginx.conf` format and commented section for use as a plain txt file
+* Robust firewall settings for pf
 
 ---
 
 ### New Features in 3.1
 * A package audit is automatically run identifying vulnerabilities in installed packages and saves to file `pkg-audit-report`
-* A script argument can be given naming the settings ini file you wish to use, mainly to toggle between secure and insecure/performance, otherwise settings.ini is used
-    * A sample performance file, for use while gaming for example, is included, please adjust as neccessary or make any many ini/tiers as you need
+* Security Tiering has been introduced with additional settings files minimal and server
+* A script argument can be given naming the settings ini file you wish to use, mainly to toggle between secure and minimal, otherwise settings.ini is used
+    * A minimum security and high performance server tier ini files are now included
+    * Adjust as neccessary or make your own set
 * A script argument of "restore" is now available, overwriting the changed files with the original files saved during first run
     * rc.conf, sysctl.conf, and loader.conf are restored. `login.conf` and the password changes are not reversed, neither are file permissions or at, cron adjustments
-* New wallpapers have been added with the assistance of [LimeWire BlueWillow](https://limewire.com/features/bluewillow-ai) v4 Artificial Intelligence image generator.
+    * `minimum.ini` does not have `first_run = True` set as it is expected to usually run secure. Therefore if using this ini file first, **backups will not be made**.
+* New wallpapers have been added with the assistance of [LimeWire BlueWillow v4](https://limewire.com/features/bluewillow-ai) Artificial Intelligence image generator.
 
 ---
 
@@ -156,17 +162,13 @@ zfs mount -a
 
 ## Customization
 
-#### 64bit vs 32bit
-Most tunable mitigations for 64bit are already included by default in FreeBSD 14.0 so 32bit directives are now omitted.
-* CPU: `sysctl hw.model hw.machine hw.ncpu`
-* Bits: `getconf LONG_BIT`
+#### pf.conf
+pf is now enabled in `settings.ini` by default but not in `minimal.ini` or `server.ini`. You will need to edit the macros with your interface, SSH port, and IP addresses before use. `admin_ips` is used by default and will take only one IP address instead of a list, but `admin_ip_range` is included for convenience. If you will be using the range macro instead of the default make sure to edit line 108 changing `admin_ips` to `admin_ip_range`. Redis is configured to be localhost only.
 
 
 #### Backups
 
-The very first time the script is run it will make copies of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` named `rc.conf.original` etc. If you've already done this yourself you may want to rename or move those files.
-
-If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run` to `True` with capital `T` to make new backups at any time after you've renamed the original backups or the script will overwrite them.
+The very first time the script is run it will make copies of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` named `rc.conf.original` etc. If you've already done this yourself you may want to rename or move those files. After the script is once run, it sets that field to false and no longer makes backups. If you would like you can set `settings.ini` section `[SCRIPT]`option `first_run` to `True` with capital `T` to make new backups at any time after you've renamed the original backups or the script will overwrite them.
 
 
 #### Chmod-ability
@@ -209,6 +211,7 @@ The newly applied settings will not take effect until you reset your password.
     * Enable access to other than permanently insecure modes
 * `microcode_update_enable = "YES"`
     * Allow CPU microcode/firmware updates
+* Disable Mail Transport Agent
 * `syslogd_flags="-ss"`
     * Disallow syslogd to bind to a network socket
 * `clear_tmp_enable = "YES"`
@@ -257,6 +260,9 @@ The newly applied settings will not take effect until you reset your password.
 * `net.inet6.icmp6.rediraccept = 0`
     * Disable ping IPv6 redirection mitigating ICMP attacks 
     * Set to 1 if using FreeBSD as network appliance
+* `net.inet.tcp.drop_synfin` [(*)](https://www.juniper.net/documentation/us/en/software/ccfips22.2/cc-security_srx5000/cc-security/topics/task/configuring-tcp-syn-fin-attack.html)
+    * Mitigates probe scans and has positive impact against DoS/DDoS attacks
+    * Quadhelion Engineering [Research](https://www.quadhelion.engineering/articles/freebsd-synfin.html) on this setting
 * `hw.mds_disable = 3` [(*)](https://www.kernel.org/doc./html/latest/arch/x86/mds.html)
     * Enable Microarchitectural Data Sampling Mitigation version `VERW`
     * Change value to `3` (AUTO) if using a Hypervisor without MDS Patch
@@ -264,6 +270,14 @@ The newly applied settings will not take effect until you reset your password.
     * Disallow Speculative Bypass used by Spectre and Meltdown
 * `kern.elf64.allow_wx = 0` [(*)](https://www.ibm.com/docs/en/aix/7.2?topic=memory-understanding-mapping)
     * Disallow write and execute for shared memory
+**SERVER.INI only**
+Common network tuning values to increase performance and alleviate congestion, useful against DoS/DDoS attacks on high bandwidth application servers
+* `kern.ipc.maxsockbuf=67108864`
+* `net.inet.tcp.sendbuf_max=67108864`
+* `net.inet.tcp.recvbuf_max=67108864`
+* `net.inet.tcp.sendbuf_auto=1`
+* `net.inet.tcp.recvbuf_auto=1`
+* `net.inet.tcp.sendbuf_inc=16384`
 
 
 **Kernel**
@@ -279,12 +293,12 @@ The newly applied settings will not take effect until you reset your password.
 
 ---
 
-### January 8, 2024 Changelog
+### January 17, 2024 Changelog
 *If you are on FreeBSD 13.2 download the 3.0.1 release tag*
 
+* pf enabled by default
 * ZenBleed workaround removed
 * 32bit protections removed
-* Sendmail limitations removed since the 14.0 MTA in use is now the more secure DMA
 
 
 ---
@@ -334,15 +348,15 @@ Lenovo Legion 5 15ACH6H
 ## License Summary
 
 ### Software
-Non-Commercial usage, retain and forward author and license data. Modify existing code as needed up to 25% while allowing unlimited new additions. The Software may use or be used by other software.
+Non-Commercial usage, Human Intelligence only, retain and forward author and license data. Modify existing code as needed up to 25% while allowing unlimited new additions. The Software may use or be used by other software.
 
 
 ### Digital Art
-All Original Digital Artists receive automatic Copyright. 
+All Digital Artists and Original Digital Art automatically receives robust International Copyright protections. 
 * Supplemental License [here](digital%20art/Quadhelion%20Engineering%20Universal%20Digital%20Art%20License.md)
 * QHE Wallpapers meet the [FreeBSD Foundation Trademark Usage Terms and Conditions](https://freebsdfoundation.org/legal/trademark-usage-terms-and-conditions/) where most FreeBSD digital art does not.
 * An original digital art creation containing the FreeBSD Logo under T&C, the larger work is thus automatically copyrighted worldwide and may not be distributed, shared, or altered. 
-* FreeBSD Foundation Members, Employees, and Associates are exempt from Digital Art restrictions
+* FreeBSD Foundation Members, Employees, and Associates are exempt from Digital Art restrictions.
 
 
 

@@ -1,0 +1,17 @@
+                location = /robots.txt {
+                        add_header  Content-Type  text/plain;
+                        return 200 "User-agent: GPTBot \nUser-agent: ChatGPT-User\nUser-agent: Google-Extended\nUser-agent: CCBot\nUser-agent: baiduspider\nUser-agent: AdsBot-Google\nUser-agent: Mediapartners-Google\nUser-agent: Google-Safety\nUser-agent: anthropic-ai \nDisallow: /\n";
+                }
+
+
+
+# User-agent: GPTBot
+# User-agent: ChatGPT-User
+# User-agent: Google-Extended
+# User-agent: CCBot
+# User-agent: baiduspider
+# User-agent: AdsBot-Google
+# User-agent: Mediapartners-Google
+# User-agent: Google-Safety
+# User-agent: anthropic-ai
+# Disallow: /
