@@ -270,6 +270,7 @@ The newly applied settings will not take effect until you reset your password.
     * Disallow Speculative Bypass used by Spectre and Meltdown
 * `kern.elf64.allow_wx = 0` [(*)](https://www.ibm.com/docs/en/aix/7.2?topic=memory-understanding-mapping)
     * Disallow write and execute for shared memory
+
 **SERVER.INI only**
 Common network tuning values to increase performance and alleviate congestion, useful against DoS/DDoS attacks on high bandwidth application servers
 * `kern.ipc.maxsockbuf=67108864`
