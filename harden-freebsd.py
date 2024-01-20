@@ -355,7 +355,7 @@ def shellCommand(section):
     try:
         for opt in config[section]:
             value = config[section][opt]
-            command_result = subprocess.run([value], shell=True, timeout=0.7)
+            command_result = subprocess.run([value], shell=True, timeout=1.7)
     except subprocess.CalledProcessError as e:
         syslog.syslog(syslog.LOG_ERR, "Failure: Shell Command")
         print(f"\n*********************\033[38;5;1m Shell Error \033[0;0m*********************")
@@ -370,7 +370,7 @@ def shellCommand(section):
         print(f"*******************************************************\n")
     else:
         print(f"\n*********************\033[38;5;76m Success \033[0;0m*************************")
-        print(f"\033[38;5;208mShell Errors: \033[0;0m {command_result.stdout}")
+        print(f"\033[38;5;208mShell Error: {opt}\033[0;0m {command_result.stdout}")
         print(f"*******************************************************\n")
 
 
