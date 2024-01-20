@@ -273,6 +273,7 @@ The newly applied settings will not take effect until you reset your password.
 
 **SERVER.INI only**
 Common network tuning values to increase performance and alleviate congestion, useful against DoS/DDoS attacks on high bandwidth application servers
+
 * `kern.ipc.maxsockbuf=67108864`
 * `net.inet.tcp.sendbuf_max=67108864`
 * `net.inet.tcp.recvbuf_max=67108864`
