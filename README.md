@@ -46,7 +46,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
     * rc.conf, sysctl.conf, and loader.conf are restored. `login.conf` and the password changes are not reversed, neither are file permissions or at, cron adjustments
     * `minimum.ini` does not have `first_run = True` set as it is expected to usually run secure. Therefore if using this ini file first, **backups will not be made**.
 * New wallpapers have been added with the assistance of [LimeWire BlueWillow v4](https://limewire.com/features/bluewillow-ai) Artificial Intelligence image generator.
-
+* Change the default umask to 027
 ---
 
 

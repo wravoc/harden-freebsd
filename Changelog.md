@@ -1,3 +1,6 @@
+## January 24, 2024
+* Change default umask to 027
+
 ## January 19, 2024
 * Enabled pf firewall by default in settings.ini
 
