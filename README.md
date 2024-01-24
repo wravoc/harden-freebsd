@@ -15,7 +15,11 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
 * Disables Sendmail completely, recommend `pkg install opensmtpd`
-* Sets passwords to blowfish encryption
+* Sets passwords to blowfish encryption, which **is** better than SHA512 for this purpose
+    * https://auth0.com/blog/hashing-in-action-understanding-bcrypt/
+    * https://security.stackexchange.com/...er-bcrypt-or-pbkdf2-over-sha256-crypt-in-pass
+    * https://docs.silverstripe.org/en/5/developer_guides/security/secure_coding/
+    * https://www.gregorygaines.com/blog/...-in-golang-using-sha512-and-why-you-shouldnt/
 * Sets passwords to expire at 120 days
 * Removes `other` write permissions from key system files and folders
 * Allows only root for `cron` and `at`
@@ -24,7 +28,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * Automate any shell command
 * System Logging to `/var/log/messages` and Script Logging to `/var/log/harden-freebsd.log`
 * Pretty prints color output of script execution to console while running
-
+* Sets umask to 027
 ---
 
 
@@ -212,6 +216,7 @@ The newly applied settings will not take effect until you reset your password.
 * `microcode_update_enable = "YES"`
     * Allow CPU microcode/firmware updates
 * Disable Mail Transport Agent
+    * Despite the documentation, these are *thoroughly* tested as the best settings
 * `syslogd_flags="-ss"`
     * Disallow syslogd to bind to a network socket
 * `clear_tmp_enable = "YES"`
