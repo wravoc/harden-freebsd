@@ -14,7 +14,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## Main Features
 
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
-* Disables Sendmail service, but it can still be run and data exfiltrated.
+* Disables Sendmail service, but it can still be run by command and abused.
     * **Recommend**:
     * `rm -rf /usr/libexec/sendmail /usr/libexec/dma` OR `chmod -R 000 sendmail dma`
     * `pkg install opensmtpd`
