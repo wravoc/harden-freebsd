@@ -14,12 +14,14 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 ## Main Features
 
 * Makes backups of `rc.conf`, `sysctl.conf`, `login.conf`, and `loader.conf` on first run
-* Disables Sendmail completely, recommend `pkg install opensmtpd`
+* Disables Sendmail service, but it can still be run and data exfiltrated. **Recommend**:
+    * `rm -rf /usr/libexec/sendmail /usr/libexec/dma` OR `chmod -R 000 sendmail dma`
+    * `pkg install opensmtpd`
 * Sets passwords to blowfish encryption, which **is** better than SHA512 for this purpose
-    * https://auth0.com/blog/hashing-in-action-understanding-bcrypt/
-    * https://security.stackexchange.com/...er-bcrypt-or-pbkdf2-over-sha256-crypt-in-pass
-    * https://docs.silverstripe.org/en/5/developer_guides/security/secure_coding/
-    * https://www.gregorygaines.com/blog/...-in-golang-using-sha512-and-why-you-shouldnt/
+    * [Okta Medical Device Authentication](https://auth0.com/blog/hashing-in-action-understanding-bcrypt/)
+    * [Security Stack Exchange](https://security.stackexchange.com/questions/133239/what-is-the-specific-reason-to-prefer-bcrypt-or-pbkdf2-over-sha256-crypt-in-pass)
+    * [Silver Stripe, Census Gov Contrator](https://docs.silverstripe.org/en/5/developer_guides/security/secure_coding/)
+    * [Google Engineer Gregory Gains](https://www.gregorygaines.com/blog/how-to-hash-and-salt-passwords-in-golang-using-sha512-and-why-you-shouldnt/)
 * Sets passwords to expire at 120 days
 * Removes `other` write permissions from key system files and folders
 * Allows only root for `cron` and `at`
@@ -216,7 +218,8 @@ The newly applied settings will not take effect until you reset your password.
 * `microcode_update_enable = "YES"`
     * Allow CPU microcode/firmware updates
 * Disable Mail Transport Agent
-    * Despite the documentation, these are *thoroughly* tested as the best settings
+    * Despite the documentation saying "NONE" is deprecated, this is not the case and hasn't been for over 15 years.
+    * These are *thoroughly* tested as the best settings as "NONE" produces one less WARNING than "NO" in some cases.
 * `syslogd_flags="-ss"`
     * Disallow syslogd to bind to a network socket
 * `clear_tmp_enable = "YES"`
