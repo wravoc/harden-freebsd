@@ -32,6 +32,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 * System Logging to `/var/log/messages` and Script Logging to `/var/log/harden-freebsd.log`
 * Pretty prints color output of script execution to console while running
 * Sets umask to 027
+
 ---
 
 
