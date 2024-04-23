@@ -168,7 +168,7 @@ zfs mount -a
 ## Customization
 
 #### pf.conf
-pf is now enabled in `settings.ini` by default but not in `minimal.ini` or `server.ini`. You will need to edit the macros with your interface, SSH port, and IP addresses before use. `admin_ips` is used by default and will take only one IP address instead of a list, but `admin_ip_range` is included for convenience. If you will be using the range macro instead of the default make sure to edit line 108 changing `admin_ips` to `admin_ip_range`. Redis is configured to be localhost only.
+pf is now enabled in `settings.ini` by default but not in `minimal.ini` or `server.ini`. You will need to edit the macros with your interface, SSH port, and IP addresses before use. `admin_ips` is used by default and will take a list of two ipaddresses seperated by a space, `admin_ip_range` is included for convenience. If you will be using the range macro instead of the default make sure to edit line 108 changing `admin_ips` to `admin_ip_range`. Redis is configured to be localhost only.
 
 
 #### Backups
