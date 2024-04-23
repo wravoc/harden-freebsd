@@ -10,7 +10,7 @@ Each of the security settings was researched, assessed, and chosen as a set of m
 
 ---
 
-For a more comprehensive true "hardened" solution with more security than this repo scope, which involves kernel modifications, I refer you to [HardenedBSD.](https://hardenedbsd.org)
+For a more comprehensive true "hardened" solution with more security than this repo scope, which involves kernel modifications, I refer you to [HardenedBSD](https://hardenedbsd.org).
 
 ---
 
