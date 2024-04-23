@@ -89,6 +89,8 @@ https://www.freebsd.org/security/advisories/
     root@freebsd:~# shutdown -r +10min "Rebooting for a security update"
     ```
 
+---
+
 ### FreeBSD 14.0 Security Changes
 * New [Mitigations Manual](https://man.freebsd.org/cgi/man.cgi?query=mitigations&sektion=7&format=html)
 * New Kernel Address Sanitizer
