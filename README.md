@@ -89,14 +89,6 @@ https://www.freebsd.org/security/advisories/
     root@freebsd:~# shutdown -r +10min "Rebooting for a security update"
     ```
 
-### Downfall Intel CPU Vulnerability
-* https://downfall.page/
-    * Skylake and Kaby Lakes are also now tested as vulnerable
-    * Computing devices based on Intel Core processors from the 6th Skylake to (including) the 11th Tiger Lake generation are affected.
-    * [Vulnerability Checker](https://github.com/flowyroll/downfall/tree/main/POC/gds_spy)
-    * **Mitigation**: Intel Microcode Update Expected 
-
-
 ### FreeBSD 14.0 Security Changes
 * New [Mitigations Manual](https://man.freebsd.org/cgi/man.cgi?query=mitigations&sektion=7&format=html)
 * New Kernel Address Sanitizer
@@ -193,23 +185,6 @@ The newly applied settings will not take effect until you reset your password.
 
 ---
 
-#### Automatic Jail Lockdown/Management Strategies
-
-1. Set the correct paths to jailed confs in `harden-freebsd.py` lines 32-38 and run for each jail.
-2. Copy software to `/root` and have jail start this script at reboot and all settings will be updated upon next reboot. To update all jails simply copy `settings.ini` with your own copy script to all appropriate locations for uptake. 
-
-`crontab -e`
-
-`@reboot /path/to/harden-freebsd.py`
-
-3. Have all jails pointing to the same rc script via `exec.start` and set paths in the script pointing to the same location modified by the script paths. 
-4. Add new jail specific entires to `settings.ini [SYSTEM]` section for sysctl.conf update
-   - `security.jail.* = 0`
-5. Use multiple copies of the script and settings.ini for each jail
-6. Put it in your template
-
-
----
 
 
 # Setting Descriptors
@@ -319,41 +294,6 @@ Common network tuning values to increase performance and alleviate congestion, u
 
 *Full [Changelog](Changelog.md)*
 
----
-
-## FreeBSD Laptop Picks
-https://wiki.freebsd.org/Laptops/
-
-* Have every check box or insignificant issues*
-* Bigger than 13" Screen
-* Made within last 8 years
-
-&#127775; [Gigabyte Aero 15X](https://wiki.freebsd.org/Laptops/Gigabyte_Aero_15X)
-
-&#9734; [HP EliteBook 1040 G3](https://wiki.freebsd.org/Laptops/HP_EliteBook_1040_G3)*
-
-[Thinkpad T550](https://wiki.freebsd.org/Laptops/Thinkpad_T550) and W550s
-
-&#11088; [Thinkpad T495](https://wiki.freebsd.org/Laptops/Thinkpad_T495)
-
-* T495*s* (lesser model, Vega 8 Graphics instead of 10)
-
-[Thinkpad T490](https://wiki.freebsd.org/Laptops/Thinkpad_T490s)
-
-* T490*s* (lesser model)
-
-
-#### Special Mentions
-&#127776; "Think Penguin" **Penguin T4** can be requested to have FreeBSD Pre-Installed
-* 10-Core Intel i5-1335U processor (up to 4.6GHz)
-* 15.6" Screen
-* User replaceable battery
-* Intel® Iris® Xe Graphics
-* 64GB RAM available
-* 4TB NVME SDD HDD available
-
-Lenovo Legion 5 15ACH6H 
-* WiFi driver supported in Linux 6.5, expected compatibility in FreeBSD 14.0 release
 
 ---
 
