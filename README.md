@@ -2,6 +2,14 @@
 
 ![](images/harden-freebsd-logo.jpg)
 
+TOC
+* [New Features](#New)
+* [Additional Features](#Additional)
+* [Installation](#Installation)
+* [Customization](#Customization)
+* [Settings Used](#Descriptors)
+* [License](#License)
+
 FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?query=security&sektion=7&manpath=freebsd-release#SECURING_THE_KERNEL_CORE,_RAW_DEVICES,_AND_FILE_SYSTEMS). This script will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning, and easier jail management. All existing entries in all confs will remain untouched unless they are modified in the settings file.
 
 This script is also targeted to new users of FreeBSD so that they may leverage years of security contributions by the entire BSD community across all spectra, implemented on their system in seconds.
@@ -46,7 +54,7 @@ For a more comprehensive true "hardened" solution with more security than this r
 * Robust firewall settings for pf
 
 ---
-
+<a name="New"></a>
 ### New Features in 3.1
 * A package audit is automatically run identifying vulnerabilities in installed packages and saves to file `pkg-audit-report`
 * Security Tiering has been introduced with additional settings files minimal and server
@@ -110,7 +118,7 @@ https://www.freebsd.org/security/advisories/
 * The process visibility policy controlled by the `security.bsd.see_other_gids` sysctl(8) knob was fixed to consider the real group of a process instead of its effective group when determining whether the user trying to access the process is a member of one of the process' groups.
 
 ---
-
+<a name="Additional"></a>
 ## Additional Software
 
 * Scripts included to verify the implementation. Run before and after the hardening.
@@ -135,7 +143,7 @@ https://www.freebsd.org/security/advisories/
 * FreeBSD 14.0
 * Python 3.9.16
 
-
+<a name="Installation"></a>
 ## Installation
 
 **WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 and rebooted!**
@@ -164,7 +172,7 @@ If you do get stuck in read-only single-user mode and need to correct a configur
 zfs set readonly=false zroot
 zfs mount -a
 ```
-
+<a name="Customization"></a>
 ## Customization
 
 #### pf.conf
@@ -191,7 +199,7 @@ The newly applied settings will not take effect until you reset your password.
 ---
 
 
-
+<a name="Descriptors"></a>
 # Setting Descriptors
 **Startup**
 
@@ -302,7 +310,7 @@ Common network tuning values to increase performance and alleviate congestion, u
 
 ---
 
-
+<a name="License"></a>
 ## License Summary
 
 ### Software
@@ -334,6 +342,7 @@ This script has no networking, accesses no sockets, and uses only standard libra
 
 Although this script is using `subprocess.run(shell=True)` the only possibility of shell injection is from the paths customized by the Licensee or unauthorized access to the filesystem the script resides on in order to perform unauthorized modifications to `settings.ini`or the Software which is not a vulnerability of the Software. 
 
+<a name="Latest"></a>
 ### Latest Development Version
 
 [Quadhelion Engineering Code Repository](https://quadhelion.dev)
