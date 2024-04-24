@@ -2,7 +2,7 @@
 
 ![](images/harden-freebsd-logo.jpg)
 
-TOC
+_Table of Contents_
 
 * [New Features](#New)
 * [Additional Features](#Additional)
@@ -10,6 +10,7 @@ TOC
 * [Customization](#Customization)
 * [Settings Used](#Descriptors)
 * [License](#License)
+---
 
 FreeBSD officially defaults to [Permanently Insecure Mode](https://man.freebsd.org/cgi/man.cgi?query=security&sektion=7&manpath=freebsd-release#SECURING_THE_KERNEL_CORE,_RAW_DEVICES,_AND_FILE_SYSTEMS). This script will duplicate all the hardening settings run by `/usr/libexec/bsdinstall/hardening` and much more. Any directive can be set and re-set with a customizable `settings.ini` for administering, tuning, and easier jail management. All existing entries in all confs will remain untouched unless they are modified in the settings file.
 
