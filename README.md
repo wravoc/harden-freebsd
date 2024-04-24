@@ -57,6 +57,7 @@ For a more comprehensive true "hardened" solution with more security than this r
 
 ---
 <a name="New"></a>
+
 ### New Features in 3.1
 * A package audit is automatically run identifying vulnerabilities in installed packages and saves to file `pkg-audit-report`
 * Security Tiering has been introduced with additional settings files minimal and server
@@ -121,6 +122,7 @@ https://www.freebsd.org/security/advisories/
 
 ---
 <a name="Additional"></a>
+
 ## Additional Software
 
 * Scripts included to verify the implementation. Run before and after the hardening.
@@ -146,6 +148,7 @@ https://www.freebsd.org/security/advisories/
 * Python 3.9.16
 
 <a name="Installation"></a>
+
 ## Installation
 
 **WARNING: Once kernel level 1 is set by this script, you will not be able to modify these confs again with this script until it is set to -1 and rebooted!**
@@ -175,6 +178,7 @@ zfs set readonly=false zroot
 zfs mount -a
 ```
 <a name="Customization"></a>
+
 ## Customization
 
 #### pf.conf
@@ -202,6 +206,7 @@ The newly applied settings will not take effect until you reset your password.
 
 
 <a name="Descriptors"></a>
+
 # Setting Descriptors
 **Startup**
 
@@ -313,6 +318,7 @@ Common network tuning values to increase performance and alleviate congestion, u
 ---
 
 <a name="License"></a>
+
 ## License Summary
 
 ### Software
