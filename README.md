@@ -3,6 +3,7 @@
 ![](images/harden-freebsd-logo.jpg)
 
 TOC
+
 * [New Features](#New)
 * [Additional Features](#Additional)
 * [Installation](#Installation)
