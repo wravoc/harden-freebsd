@@ -54,6 +54,7 @@ For a more comprehensive true "hardened" solution with more security than this r
 * Directory (Hier)archy Visual Map, PDF, in /docs
 * robots.txt to deny AI use of your intellectual property, with inline `nginx.conf` format and commented section for use as a plain txt file
 * Robust firewall settings for pf
+* You can grab icons and more Wallpapers at the [Quadhelion Engineering Development Gogs/Gitea Git Repo](https://quadhelion.dev/elias/bsd-wallpapers)
 
 ---
 <a name="New"></a>
