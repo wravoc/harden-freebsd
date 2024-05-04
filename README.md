@@ -1,6 +1,6 @@
 # Harden FreeBSD 
 
-![](images/harden-freebsd-logo.jpg)
+![](digital-art/QHE-Hardened-FreeBSD-wallpaper-red-tm.png)
 
 _Table of Contents_
 
