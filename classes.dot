@@ -1,0 +1,6 @@
+digraph "classes" {
+rankdir=BT
+charset="utf-8"
+"harden-freebsd.Conf" [color="black", fontcolor="black", label=<{Conf|file<br ALIGN="LEFT"/>flag<br ALIGN="LEFT"/>found : bool<br ALIGN="LEFT"/>setting<br ALIGN="LEFT"/>|addConf()<br ALIGN="LEFT"/>checkConf(): bool<br ALIGN="LEFT"/>restoreConf()<br ALIGN="LEFT"/>setConf()<br ALIGN="LEFT"/>verifyConf()<br ALIGN="LEFT"/>}>, shape="record", style="solid"];
+"harden-freebsd.SetOpts" [color="black", fontcolor="black", label=<{SetOpts|section<br ALIGN="LEFT"/>|}>, shape="record", style="solid"];
+}
